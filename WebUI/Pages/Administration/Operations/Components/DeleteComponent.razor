@@ -1,0 +1,31 @@
+﻿@using WebUI.Services.OperationServices
+
+@inject IOperationService operationService
+
+<MudDialog Width="300px">
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" OnClick="@(() => Delete(@OperationId))" ButtonType="ButtonType.Submit" Color="Color.Error">Da</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="Cancel">Anulează</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid OperationId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Delete(Guid id)
+    {
+        await operationService.OperationDelete(id);
+
+        Callback?.Invoke();
+        MudDialog.Close();
+    }
+}

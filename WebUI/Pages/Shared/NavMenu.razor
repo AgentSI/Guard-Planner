@@ -1,0 +1,83 @@
+﻿@using Application.DTOs
+@using Microsoft.AspNetCore.Components.Authorization
+@using WebUI.Services.UserAccountServices
+@using WebUI.Services.WorkerServices
+
+@inject IWorkerService workerService
+@inject CurrentUserDto currentUser
+@inject CurrentUserService currentUserService
+
+<MudNavMenu Bordered="true">
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Acasă</MudNavLink>
+    <MudDivider />
+    @if (currentUser.UserRole == "Administrator")
+    {
+        <MudNavGroup Expanded="true" Title="Administrare Gărzi">
+            <AuthorizeView>
+                <MudNavLink Href="/generate-guards" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AutoMode">Generează Gărzi</MudNavLink>
+                <MudDivider />
+
+                <MudNavLink Href="/guard-calendar" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth">Calendar Gărzi</MudNavLink>
+                <MudDivider />
+
+                <MudNavLink Href="/guards" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DarkMode">Tabel Gărzi</MudNavLink>
+                <MudDivider />
+
+                <MudNavLink Href="/operations" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MedicalServices">Tabel Operații</MudNavLink>
+                <MudDivider />
+            </AuthorizeView>
+        </MudNavGroup>
+        <MudNavGroup Expanded="true" Title="Administrare Lucrători">
+            <AuthorizeView>
+                <MudNavLink Href="/vacations" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.WbSunny">Tabel Concedii</MudNavLink>
+                <MudDivider />
+
+                <MudNavLink Href="/workers-hours" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccessAlarm">Tabel ore de lucru</MudNavLink>
+                <MudDivider />
+
+                <MudNavLink Href="/workers" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Work">Tabel Lucrători</MudNavLink>
+                <MudDivider />
+
+                <MudNavLink Href="/percents" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Percent">Procent gardă</MudNavLink>
+                <MudDivider />
+            </AuthorizeView>
+        </MudNavGroup>
+
+        <MudNavLink Href="/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PersonAdd">Tabel Utilizatori</MudNavLink>
+        <MudDivider />
+    }
+    <MudNavLink Href="/my-profile" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Person">Profilul meu</MudNavLink>
+    <MudDivider />
+    @if (currentUser.UserRole == "Lucrător")
+    {
+        var vacationsUrl = $"/vacations/{worker.Id}";
+        var guardsUrl = $"/guards/{worker.Id}";
+
+        <MudNavLink Href="@vacationsUrl" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.WbSunny">Concediile mele</MudNavLink>
+        <MudDivider />
+
+        <MudNavLink Href="@guardsUrl" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DarkMode">Gărzile mele</MudNavLink>
+        <MudDivider />
+    }
+</MudNavMenu>
+<p class="mud-typography mud-typography-body2 mud-typography-align-justify d-flex align-content-end flex-wrap flex-grow-1 gap-4 ml-5">©2024 Ivanova Evghenia</p>
+
+@code {
+    private WorkerDto worker = new WorkerDto();
+
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await currentUserService.InitializeAsync();
+        var currentUser = await currentUserService.GetAsync();
+        if (currentUser.UserRole == "Lucrător") worker = await workerService.GetWorkerByEmail(currentUser.Email);
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

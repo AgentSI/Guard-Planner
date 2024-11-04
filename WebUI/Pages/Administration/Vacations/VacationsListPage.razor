@@ -1,0 +1,199 @@
+﻿@page "/vacations"
+@page "/vacations/{WorkerId:guid}"
+@layout MainLayout
+
+@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Pages.Administration.Vacations.Components
+@using WebUI.Services.UserAccountServices
+@using WebUI.Services.VacationServices
+
+@inject CurrentUserDto currentUser
+@inject IVacationService vacationService
+@inject IDialogService dialogsService
+@inject NavigationManager navigationManager
+
+<AuthorizeView Context="view">
+
+    @if (isLoadingType)
+    {
+        <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+    }
+    else
+    {
+        @if (WorkerId.HasValue && currentUser.UserRole == "Administrator")
+        {
+            <AuthorizeView>
+                <div class="d-flex justify-start flex-grow-1 gap-4 mb-2 mt-4">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="NavigateBack" />
+                </div>
+            </AuthorizeView>
+        }
+        else if (currentUser.UserRole == "Administrator")
+        {
+            <AuthorizeView>
+                <div class="d-flex justify-end flex-grow-1 gap-4 mb-2 mt-4">
+                    <MudButton StartIcon="@Icons.Material.Filled.PieChart" Href="/vacations-diagram" Variant="Variant.Outlined" Color="Color.Primary">Vezi în Diagramă</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="()=>OpenDialog()" Variant="Variant.Outlined" Color="Color.Primary" Class="ml-auto">Adaugă concediu</MudButton>
+                </div>
+            </AuthorizeView>
+        }
+
+        <MudTable Items="vacations" T="VacationDto">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Lista concediilor</MudText>
+                <MudSpacer />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Lucrător
+                    <MudButton OnClick="@(() => SortColumn(nameof(VacationDto.WorkerName)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(VacationDto.WorkerName)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>De la data
+                    <MudButton OnClick="@(() => SortColumn(nameof(VacationDto.StartDate)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(VacationDto.StartDate)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Până la data
+                    <MudButton OnClick="@(() => SortColumn(nameof(VacationDto.EndDate)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(VacationDto.EndDate)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Nr. de zile
+                    <MudButton OnClick="@(() => SortColumn(nameof(VacationDto.NoDays)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(VacationDto.NoDays)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Acțiuni</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="context">
+                <MudTd>@context.WorkerName</MudTd>
+                <MudTd>@context.StartDate?.ToString("dd.MM.yyyy")</MudTd>
+                <MudTd>@context.EndDate?.ToString("dd.MM.yyyy")</MudTd>
+                <MudTd>@context.NoDays</MudTd>
+                <MudTd>
+                    @if (currentUser.UserRole == "Administrator")
+                    {
+                        <AuthorizeView Context="edit">
+                            <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id)" Color="Color.Success"><MudIcon Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" /></MudButton>
+                        </AuthorizeView>
+                        <AuthorizeView Context="delete">
+                            <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id, true)" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" /></MudButton>
+                        </AuthorizeView>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudPagination SelectedChanged="SelectPage" Count="@TotalPages" Selected="@CurrentPage" Class="pa-4" />
+            </PagerContent>
+        </MudTable>
+    }
+</AuthorizeView>
+
+@code {
+    public bool isLoadingType = true;
+    private string sortColumn;
+    private bool? sortDirection = null;
+
+    [Parameter]
+    public Guid? WorkerId { get; set; }
+
+    private List<VacationDto> vacations = new List<VacationDto>();
+
+    private const int PageSize = 10;
+    public int TotalPages { get; set; }
+    public int CurrentPage { get; set; } = 1;
+    public EventCallback<int> PageChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        isLoadingType = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectPage(int page)
+    {
+        if (page != CurrentPage && page > 0 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            await PageChanged.InvokeAsync(page);
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        var parameters = new PaginationParameter
+            {
+                PageNumber = CurrentPage,
+                PageSize = PageSize,
+                SortBy = sortColumn,
+                SortDescending = sortDirection
+            };
+
+        PaginationResult<VacationDto>? result;
+        if (WorkerId.HasValue) result = await vacationService.GetVacations(parameters, WorkerId.Value);
+        else result = await vacationService.GetVacations(parameters);
+
+        if (result == null)
+        {
+            vacations = new List<VacationDto>();
+        }
+        else
+        {
+            var newList = result.Items.ToList();
+            TotalPages = (int)Math.Ceiling((double)result.TotalItems / PageSize);
+            vacations = newList;
+            StateHasChanged();
+        }
+    }
+
+    private void SortColumn(string columnName)
+    {
+        if (sortColumn == columnName)
+        {
+            sortDirection = sortDirection == true ? false : true;
+        }
+        else
+        {
+            sortColumn = columnName;
+            sortDirection = true;
+        }
+
+        LoadData();
+    }
+
+    private string GetSortIcon(string columnName)
+    {
+        if (columnName == sortColumn && sortDirection != null)
+            return sortDirection == true ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
+
+        return Icons.Material.Filled.ArrowDownward;
+    }
+
+    private void OpenDialog(Guid? content = null, bool delete = false)
+    {
+        var dialog = default(IDialogReference);
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("VacationId", content);
+        parameters.Add("callback", callback);
+
+        if (delete)  dialog = dialogsService.Show<DeleteComponent>("Sunteți sigur că doriți să ștergeți acest concediu ?", parameters, options);
+        else dialog = dialogsService.Show<AddEditVacationComponent>("Detalii concediu", parameters, options);
+    }
+
+    private void NavigateBack()
+    {
+        navigationManager.NavigateTo("/workers");
+    }
+}

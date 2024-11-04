@@ -1,0 +1,135 @@
+﻿@page "/my-profile"
+
+@using Application.DTOs
+@using WebUI.Services.UserAccountServices
+@using WebUI.Services.WorkerServices
+
+@inject CurrentUserDto currentUser
+@inject CurrentUserService currentUserService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject IUserAccountService accountService
+@inject IWorkerService workerService
+@inject NavigationManager navigationManager
+
+<AuthorizeView>
+    <MudPaper Class="profile-card" Elevation="4" Style="padding: 24px; max-width: 1000px; margin: auto; margin-top: 32px;">
+        <MudText Typo="Typo.h5" GutterBottom="true" Style="text-align:center;">Profilul Meu</MudText>
+
+        <MudGrid>
+            <MudItem xs="12" sm="6" Style="text-align:center;">
+                <MudAvatar Style="height:150px; width:150px; font-size:3rem; margin-top: 10px;" Color="Color.Primary" Size="Size.Large">@userInitials</MudAvatar>
+            </MudItem>
+
+            @if (currentUser.UserRole == "Administrator")
+            {
+                <MudItem xs="12" sm="6">
+                    <div class="profile-menu">
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Nume: <b>@user.Username</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Rol: <b>@user.Role</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Email: <b>@user.Email</b></MudText>
+                    </div>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" sm="6">
+                    <div class="profile-menu">
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Nume: <b>@worker.Name @worker.FirstName</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Email: <b>@worker.Email</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Specializare: <b>@worker.Specialization</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Zile de concediu rămase: <b>@worker.NoDaysVacation</b></MudText>
+                        @if (worker.IsGuard)
+                        {
+                            <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Procent gardă: <b>@worker.Percent</b></MudText>
+                        }
+                    </div>
+                </MudItem>
+            }
+        </MudGrid>
+
+        <MudDivider Style="margin: 20px 0;" />
+
+        <MudText Typo="Typo.h6" GutterBottom="true" Style="text-align:center;">Editează Profilul</MudText>
+
+        @if (isLoadingType)
+        {
+            <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; display:block; margin:auto;" Indeterminate="true" />
+        }
+        else
+        {
+            <EditForm Model="user" OnValidSubmit="Save" Context="editFormContext">
+                <DataAnnotationsValidator />
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="user.Username" For="@(() => user.Username)" Label="Nume" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="user.Email" For="@(() => user.Email)" Label="Email" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        @if (currentUser.UserRole == "Administrator")
+                        {
+                            <MudSelect T="string" MultiSelection="false" @bind-Value="user.Role" Label="Rol" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Placeholder="Rol">
+                                @foreach (var role in roles)
+                                {
+                                    <MudSelectItem Value="@role">@role</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                        else
+                        {
+                            <MudTextField @bind-Value="user.Role" For="@(() => user.Role)" Label="Rol" ReadOnly Variant="Variant.Outlined" />
+                        }
+                    </MudItem>
+                    <MudGrid Justify="Justify.FlexEnd">
+                        <MudItem>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Style="margin-right: 8px;">Salvează</MudButton>
+                            <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudGrid>
+            </EditForm>
+        }
+    </MudPaper>
+</AuthorizeView>
+
+@code {
+    public bool isLoadingType = true;
+    private UserDto user = new UserDto();
+    private WorkerDto worker = new WorkerDto();
+    private List<string> roles = new List<string>();
+
+    private string userInitials => !string.IsNullOrEmpty(user.Username)
+        ? string.Concat(user.Username.Split(' ').Select(s => s[0]))
+        : "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        await authenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUser = await currentUserService.GetAsync();
+        user = await accountService.GetUserById(currentUser.Id);
+        if (currentUser.UserRole == "Lucrător") worker = await workerService.GetWorkerByEmail(currentUser.Email);
+        isLoadingType = false;
+        roles = await accountService.GetRoles();
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        var userToEdit = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Username = user.Username,
+                Role = user.Role
+            };
+
+        var result = await accountService.UserEdit(userToEdit);
+        await OnInitializedAsync();
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("/");
+    }
+}

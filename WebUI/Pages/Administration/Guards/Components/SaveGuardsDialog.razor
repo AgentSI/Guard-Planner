@@ -1,0 +1,32 @@
+﻿@using Application.DTOs
+@using WebUI.Services.GuardServices
+
+@inject IGuardService guardService
+
+<MudDialog Width="300px">
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" OnClick="@(() => SaveGuards(@Guards))" ButtonType="ButtonType.Submit" Color="Color.Error">Confirm</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="Cancel">Anulează</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public List<GuardDto> Guards { get; set; } = new List<GuardDto>();
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveGuards(List<GuardDto> guards)
+    {
+        await guardService.SaveGuards(guards);
+
+        Callback?.Invoke();
+        MudDialog.Close();
+    }
+}

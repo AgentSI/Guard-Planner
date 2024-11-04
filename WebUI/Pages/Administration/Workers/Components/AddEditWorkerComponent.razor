@@ -1,0 +1,141 @@
+﻿@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Services.WorkerServices
+
+@inject IWorkerService workerService
+@inject CurrentUserDto currentUser
+@inject ISnackbar Snackbar
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="workerFormDetails" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="workerFormDetails.Name" For="@(() => workerFormDetails.Name)" Label="Nume" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="workerFormDetails.FirstName" For="@(() => workerFormDetails.FirstName)" Label="Prenume" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="workerFormDetails.Specialization" For="@(() => workerFormDetails.Specialization)" Label="Specializare" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="workerFormDetails.Email" For="@(() => workerFormDetails.Email)" Label="Email" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudCheckBox @bind-Value="workerFormDetails.Available" Label="Este disponibil"></MudCheckBox>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudCheckBox @bind-Value="workerFormDetails.IsGuard" Label="Are gărzi"></MudCheckBox>
+                </MudItem>
+                @if (workerFormDetails.IsGuard)
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="double" MultiSelection="false" @bind-Value="workerFormDetails.Percent" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="form-select-sm" Label="Procent gardă">
+                            @foreach (var percent in percents)
+                            {
+                                <MudSelectItem Value="@percent" Class="form-select-sm">@percent</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                        <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    PaginationParameter paginationParameters = new PaginationParameter();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid? WorkerId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    WorkerDto workerFormDetails = new WorkerDto();
+    private List<double> percents = new List<double>();
+
+    string message = string.Empty;
+    string messageCssClass = string.Empty;
+    private bool isLoading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (WorkerId.HasValue)
+        {
+            workerFormDetails = await workerService.GetWorkerById(WorkerId.Value);
+        }
+
+        isLoading = false;
+        percents = await workerService.GetPercentages();
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        if (workerFormDetails.IsGuard && workerFormDetails.Percent == 0)
+        {
+            Snackbar.Add("Procent-ul gardă trebuie să fie mai mare decât 0", Severity.Error);
+            return;
+        }
+
+        bool isSuccessfull = false;
+
+        if (!WorkerId.HasValue)
+        {
+            var create = new WorkerDto
+                {
+                    Name = workerFormDetails.Name,
+                    FirstName = workerFormDetails.FirstName,
+                    Specialization = workerFormDetails.Specialization,
+                    Email = workerFormDetails.Email,
+                    Available = workerFormDetails.Available,
+                    IsGuard  = workerFormDetails.IsGuard,
+                    Percent = workerFormDetails.Percent
+                };
+
+            var id = await workerService.WorkerCreate(create);
+            isSuccessfull = id != Guid.Empty;
+        }
+        else
+        {
+            var toEdit = new WorkerDto
+                {
+                    Id = workerFormDetails.Id,
+                    Name = workerFormDetails.Name,
+                    FirstName = workerFormDetails.FirstName,
+                    Specialization = workerFormDetails.Specialization,
+                    Email = workerFormDetails.Email,
+                    Available = workerFormDetails.Available,
+                    IsGuard = workerFormDetails.IsGuard,
+                    Percent = workerFormDetails.Percent
+                };
+
+            if (!toEdit.IsGuard) toEdit.Percent = 0;
+            var result = await workerService.WorkerEdit(toEdit);
+            if (result != null) isSuccessfull = true;
+        }
+
+        if (isSuccessfull) Callback?.Invoke();
+
+        MudDialog.Close();
+    }
+}

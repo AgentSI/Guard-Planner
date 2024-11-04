@@ -1,0 +1,122 @@
+﻿@page "/login"
+
+@using Application.DTOs
+@using Microsoft.AspNetCore.Components.Forms
+@using WebUI.Services.UserAccountServices
+
+@inject NavigationManager navigationManager
+@inject IUserAccountService userService
+@inject CurrentUserService currentUserService
+
+<MudContainer Class="d-flex align-center flex-grow-1 gap-4" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudStack Class="relative" Style="margin: 0 auto">
+        <div class="text-danger">
+            <span>@errorMessage</span>
+        </div>
+
+        <EditForm Model="user" OnValidSubmit="HandleLogin">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="user.Email" Label="Email" For="@(() => user.Email)" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="user.Password" For="@(() => user.Password)" Label="Parola" Required="true" Variant="Variant.Outlined" InputType="InputType.Password" />
+                </MudItem>
+            </MudGrid>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudButton OnClick="FillCredentialAdmin" Variant="Variant.Filled" Color="Color.Primary">
+                        Completați credențialele admin
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton OnClick="FillCredentialWorker" Variant="Variant.Filled" Color="Color.Primary">
+                        Completați credențialele Lucrător
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12">
+                    @if (isLoggingIn)
+                    {
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Style="text-align: right" Class="mt-5">
+                            <MudProgressCircular Color="Color.Default" Size="Size.Small" Indeterminate="true" />
+                            &nbsp; Conectare...
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                            Conectare
+                        </MudButton>
+                    }
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton OnClick="NavigateToResetPass" Variant="Variant.Filled" Color="Color.Primary">
+                        Resetare parolă
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToRegister">
+                        Înregistrare
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+          
+        </EditForm>
+        
+    </MudStack>
+</MudContainer>
+
+@code {
+    private LoginDto user = new LoginDto();
+
+    private bool isLoggingIn = false;
+    private string errorMessage = string.Empty;
+
+    private void FillCredentialAdmin()
+    {
+        user.Email = "admin@mail.com";
+        user.Password = "Parola11a#";
+    }
+
+    private void FillCredentialWorker()
+    {
+        user.Email = "ana@mail.com";
+        user.Password = "Parola11a#";
+    }
+
+    private async Task HandleLogin()
+    {
+        if (user.Email == null || user.Password == null)
+        {
+            errorMessage = "Vă rugăm să introduceți atât adresa de e-mail, cât și parola";
+            return;
+        }
+
+        isLoggingIn = true;
+        var result = await userService.Login(user);
+
+        if (result.Success)
+        {
+            await currentUserService.InitializeAsync();
+            errorMessage = string.Empty;
+            navigationManager.NavigateTo("/", true);
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = result.ResponseMessage;
+        }
+
+        isLoggingIn = false;
+    }
+
+    private void NavigateToRegister()
+    {
+        navigationManager.NavigateTo("/register");
+    }
+
+    private void NavigateToResetPass()
+    {
+        navigationManager.NavigateTo("/reset-password");
+    }
+}

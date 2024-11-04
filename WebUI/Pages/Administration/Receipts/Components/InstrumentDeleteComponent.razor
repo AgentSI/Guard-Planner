@@ -1,0 +1,34 @@
+﻿@using WebUI.Services.InstrumentServices
+
+@inject IInstrumentService instrumentService
+
+<MudDialog Width="300px">
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" OnClick="@(() => Delete(@InstrumentId))" ButtonType="ButtonType.Submit" Color="Color.Error">Da</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="Cancel">Anulează</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid InstrumentId { get; set; }
+
+    [Parameter]
+    public Guid? ReceiptId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Delete(Guid id)
+    {
+        await instrumentService.InstrumentDelete(id);
+
+        Callback?.Invoke();
+        MudDialog.Close();
+    }
+}

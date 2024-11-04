@@ -1,0 +1,117 @@
+﻿@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Services.OperationServices
+
+@inject IOperationService operationService
+@inject CurrentUserDto currentUser
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="formDetails" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Type" For="@(() => formDetails.Type)" Label="Tip" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTimePicker @bind-Time="formDetails.StartTime" Label="Ora de început" For="@(() => formDetails.StartTime)" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTimePicker @bind-Time="formDetails.EndTime" Label="Ora de sfârșit" For="@(() => formDetails.EndTime)" Variant="Variant.Outlined" />
+                </MudItem>
+                @* <MudItem xs="12" sm="6">
+                    <MudSelect T="double" MultiSelection="false" @bind-Value="formDetails.Hours" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="form-select-sm" Placeholder="Nr. de ore">
+                        @foreach (var hour in hours)
+                        {
+                            <MudSelectItem Value="@hour" Class="form-select-sm">@hour</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <ValidationMessage For="@(() => formDetails.Hours)" />
+                </MudItem> *@
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                        <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    PaginationParameter paginationParameters = new PaginationParameter();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid? OperationId { get; set; }
+
+    [Parameter]
+    public Guid GuardId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    OperationDto formDetails = new OperationDto();
+
+    string message = string.Empty;
+    string messageCssClass = string.Empty;
+    private bool isLoading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (OperationId.HasValue)
+        {
+            formDetails = await operationService.GetOperationById(OperationId.Value);
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        bool isSuccessfull = false;
+
+        if (!OperationId.HasValue)
+        {
+            var create = new OperationDto
+                {
+                    Type = formDetails.Type,
+                    StartTime = formDetails.StartTime,
+                    EndTime = formDetails.EndTime,
+                    GuardId = GuardId
+                };
+
+            var id = await operationService.OperationCreate(create);
+            isSuccessfull = id != Guid.Empty;
+        }
+        else
+        {
+            var toEdit = new OperationDto
+                {
+                    Id = formDetails.Id,
+                    Type = formDetails.Type,
+                    StartTime = formDetails.StartTime,
+                    EndTime = formDetails.EndTime,
+                    GuardId = GuardId
+                };
+
+            var result = await operationService.OperationEdit(toEdit);
+            if (result != null) isSuccessfull = true;
+        }
+
+        if (isSuccessfull) Callback?.Invoke();
+
+        MudDialog.Close();
+    }
+}

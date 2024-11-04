@@ -1,0 +1,74 @@
+﻿@page "/vacations-diagram"
+
+@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Services.VacationServices
+
+@inject IVacationService vacationService
+
+<style>
+    .chart-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+<AuthorizeView>
+    <div class="d-flex justify-start flex-grow-1 gap-4 mb-2 mt-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" Href="/vacations" />
+    </div>
+</AuthorizeView>
+
+<MudPaper Class="pa-4">
+    <div class="chart-container">
+        @if (vacations.Any())
+        {
+            <MudChart ChartType="ChartType.Bar"
+                      ChartSeries="@Series"
+                      XAxisLabels="@XAxisLabels"
+                      LegendPosition="@(Position.Top)"
+                      Width="100%"
+                      Height="350px"/>
+        }
+        else
+        {
+            <MudText>Nu există concedii.</MudText>
+        }
+    </div>
+</MudPaper>
+
+@code {
+    private List<VacationDto> vacations = new List<VacationDto>();
+    private string[] XAxisLabels;
+    private List<ChartSeries> Series = new List<ChartSeries>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var parameters = new PaginationParameter { PageNumber = 1, PageSize = 100 };
+            var vacationsP = await vacationService.GetVacations(parameters);
+            vacations = vacationsP.Items.ToList();
+
+            if (vacations.Any())
+            {
+                var workerGroups = vacations.GroupBy(v => v.WorkerName)
+                .Select(g => new
+                {
+                    WorkerName = g.Key + " - " + g.Sum(v => v.NoDays),
+                    TotalDays = g.Sum(v => v.NoDays)
+                }).ToList();
+
+                XAxisLabels = workerGroups.Select(g => g.WorkerName).ToArray();
+                Series.Clear();
+                Series.Add(new ChartSeries
+                    {
+                        Name = "Zile de concediu",
+                        Data = workerGroups.Select(g => (double)g.TotalDays).ToArray()
+                    });
+            }
+        }
+        catch (Exception ex) { }
+    }
+}

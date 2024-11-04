@@ -1,0 +1,120 @@
+﻿@page "/register"
+
+@using System.Text.RegularExpressions
+@using Application.DTOs
+@using WebUI.Services.UserAccountServices
+
+@inject IUserAccountService userService
+@inject ISnackbar snackbar
+@inject NavigationManager navigationManager
+
+<MudContainer Class="d-flex align-center flex-grow-1 gap-4" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudStack Class="relative" Style="margin: 0 auto">
+        <h3>Înregistrare</h3>
+        @if (isSendCode)
+        {
+            <MudItem xs="12">
+                <MudTextField @bind-Value="confirmationCode" Label="Cod-ul de confirmare" Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudButton OnClick="CodeConfirm" Variant="Variant.Filled" Color="Color.Primary" Style="text-align: center" Class="mt-5">Confirmare</MudButton>
+        }
+        else
+        {
+            <EditForm Model="user" OnValidSubmit="HandleSubmit">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="user.Username" Label="Nume" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="user.Email" Label="Email" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="user.Password" Label="Parola" Variant="Variant.Outlined" InputType="InputType.Password" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="confirmPassword" Label="Confirmă parola" Variant="Variant.Outlined" InputType="InputType.Password" />
+                    </MudItem>
+                </MudGrid>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Style="text-align: center" Class="mt-5">Înregistrare</MudButton>
+            </EditForm>
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+    private UserDto user = new UserDto();
+    private string confirmPassword = string.Empty;
+    private string confirmationCode = string.Empty;
+
+    private bool isSendCode = false;
+
+    private async Task HandleSubmit()
+    {
+        if (user.Username == null || user.Email == null || user.Password == null)
+        {
+            snackbar.Add("Toate campurile trebuie completate!", Severity.Warning);
+            return;
+        }
+
+        if (!IsEmailValid(user.Email))
+        {
+            snackbar.Add("Formatul emailului nu este valid.", Severity.Warning);
+            return;
+        }
+
+        if (!IsValidPassword(user.Password)) 
+        {
+            snackbar.Add("Parola trebuie să includă cel puțin o literă mică, o literă mare, o cifră și un simbol!", Severity.Warning);
+            return;
+        }
+
+        if (user.Password != confirmPassword) 
+        {
+            snackbar.Add("Parolele nu coincid.", Severity.Warning);
+            return;
+        }
+
+        var userResponse = await userService.UserCreate(user);
+
+        if (!userResponse.Success)
+        {
+            snackbar.Add("Înregistrarea a eșuat, încercați din nou.", Severity.Error);
+            return;
+        }
+
+        var result = await userService.SendConfirmationCode(user.Email);
+        if (result)
+        {
+            snackbar.Add("Un cod de confirmare a fost trimis pe adresa de e-mail.", Severity.Success);
+            isSendCode = true;
+        }
+        else snackbar.Add("A apărut o eroare, încercați din nou.", Severity.Error);
+    }
+
+    private bool IsEmailValid(string email)
+    {
+        var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        return regex.IsMatch(email);
+    }
+
+    private bool IsValidPassword(string password)
+    {
+        return password.Any(char.IsLower) &&
+               password.Any(char.IsUpper) &&
+               password.Any(char.IsDigit) &&
+               password.Any(ch => "!@#$%^&*()_+-=[]{}|;:,.<>?".Contains(ch));
+    }
+
+    private async void CodeConfirm()
+    {
+        if (!string.IsNullOrEmpty(confirmationCode))
+        {
+            var confirmationResult = await userService.VerifyConfirmationCode(user.Email, confirmationCode);
+            if (confirmationResult) snackbar.Add("Email-ul a fost confirmat. Logați-vă cu credențialele noi.", Severity.Success);
+            else snackbar.Add("Cod de confirmare greșit, încercați din nou.", Severity.Error);
+            if (confirmationResult) navigationManager.NavigateTo("/");
+        }
+        else snackbar.Add("Cod-ul de confirmare lipsește.", Severity.Warning);
+    }
+}

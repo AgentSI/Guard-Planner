@@ -1,0 +1,203 @@
+﻿@page "/guard-calendar"
+
+@using Application.DTOs
+@using WebUI.Services.GuardServices
+@using WebUI.Services.UserAccountServices
+
+@inject IGuardService guardService
+@inject CurrentUserDto currentUser
+@inject CurrentUserService currentUserService
+
+<style>
+    .calendar {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        border: 1px solid #ccc;
+    }
+
+    .calendar-header {
+        text-align: center;
+        font-size: 1.5em;
+        padding: 10px;
+    }
+
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr); /* 7 days in a week */
+        gap: 2px;
+        padding: 10px;
+    }
+
+    .calendar-day {
+        border: 1px solid #ccc;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        color: black;
+    }
+
+    .day-header {
+        font-weight: bold;
+        background-color: #f0f0f0;
+    }
+</style>
+
+@if (isLoadingType)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+else
+{
+    <br />
+    <MudGrid Justify="Justify.Center">
+        <MudItem xs="12" class="d-flex justify-center">
+            <MudButton StartIcon="@Icons.Material.Filled.Mail" Variant="Variant.Outlined" Color="Color.Primary" OnClick="SendGuards" Disabled="@isSendingGuards" class="mr-5">
+                @if (isSendingGuards)
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" Style="margin-right: 10px;" />
+                    <span>Se trimite...</span>
+                }
+                else
+                {
+                    <span>Trimite gărzile lucrătorilor pe mail</span>
+                }
+            </MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteGuards">
+                Șterge graficul pentru luna selectată
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    
+    <MudContainer Class="pt-16 w3-display-container w3-grayscale-min w3-display-left w3-text-white" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PreviousMonth">Înapoi</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NextMonth">Înainte</MudButton>
+        </div>
+        <div class="calendar">
+            <div class="calendar-header">
+                <h3>@CurrentDate.Value.ToString("MMMM yyyy")</h3>
+            </div>
+            <div class="calendar-days">
+                <div class="calendar-day day-header">Luni</div>
+                <div class="calendar-day day-header">Marți</div>
+                <div class="calendar-day day-header">Miercuri</div>
+                <div class="calendar-day day-header">Joi</div>
+                <div class="calendar-day day-header">Vineri</div>
+                <div class="calendar-day day-header">Sâmbătă</div>
+                <div class="calendar-day day-header">Duminică</div>
+
+                @for (int i = 1; i <= DateTime.DaysInMonth(CurrentDate.Value.Year, CurrentDate.Value.Month); i++)
+                {
+                    var currentDate = new DateTime(CurrentDate.Value.Year, CurrentDate.Value.Month, i);
+                    var guardForDay = Guards.FirstOrDefault(g => g.Date?.Date == currentDate.Date);
+                    var color = guardForDay != null ? guardForDay.Color : "white";
+                    var workerName = guardForDay != null ? guardForDay.WorkerName : string.Empty;
+
+                    if (i == 1)
+                    {
+                        int firstDayOfWeek = (int)currentDate.DayOfWeek;
+                        firstDayOfWeek = (firstDayOfWeek + 6) % 7;
+                        for (int j = 0; j < firstDayOfWeek; j++)
+                        {
+                            <div class="calendar-day" style="background-color: transparent; border: none;"></div>
+                        }
+                    }
+
+                    <div class="calendar-day" style="background-color:@color; position: relative;">
+                        <span>@i</span>
+                        @if (!string.IsNullOrEmpty(workerName))
+                        {
+                            <div style="font-size: 0.8em; color: black; position: absolute; bottom: 5px; right: 5px;">@workerName</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <br />
+        <h3>Legendă:</h3>
+        <br />
+        <ul style="display: flex; flex-wrap: wrap; padding: 0; list-style: none;">
+            @foreach (var guard in LegentGuards)
+            {
+                <li style="display: flex; align-items: center; margin-right: 10px; margin-bottom: 10px; width: calc(20% - 10px);">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: @guard.Color; margin-right: 8px;"></span>
+                    @guard.WorkerName
+                </li>
+            }
+        </ul>
+    </MudContainer>
+}
+
+@code {
+    public bool isLoadingType = true;
+    private bool isSendingGuards = false;
+
+    private DateTime? CurrentDate { get; set; } = DateTime.Now;
+    private List<GuardDto> Guards { get; set; } = new List<GuardDto>();
+    private List<GuardDto> LegentGuards { get; set; } = new List<GuardDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGuardsAsync();
+    }
+
+    private async Task LoadGuardsAsync()
+    {
+        await currentUserService.InitializeAsync();
+
+        Guards = await guardService.GetGuards(CurrentDate.Value.Month, CurrentDate.Value.Year);
+        LegentGuards = Guards.DistinctBy(g => g.WorkerName).ToList();
+
+        var defaultColors = new List<string>
+        {
+            "#FF6500", "#1E3E62", "#4CC9FE", "#7E60BF", "#E4B1F0",
+            "#72BF78", "#AF1740", "#FEEC37", "#FF77B7", "#B1D690"
+        };
+
+        for (int i = 0; i < LegentGuards.Count; i++)
+        {
+            LegentGuards[i].Color = defaultColors[i % defaultColors.Count];
+        }
+
+        foreach (var guard in Guards)
+        {
+            var legendGuard = LegentGuards.FirstOrDefault(lg => lg.WorkerName == guard.WorkerName);
+            guard.Color = legendGuard?.Color ?? "grey";
+        }
+
+        isLoadingType = false;
+        StateHasChanged();
+    }
+
+    private async Task PreviousMonth()
+    {
+        CurrentDate = CurrentDate.Value.AddMonths(-1);
+        await LoadGuardsAsync();
+    }
+
+    private async Task NextMonth()
+    {
+        CurrentDate = CurrentDate.Value.AddMonths(1);
+        await LoadGuardsAsync();
+    }
+
+    private async Task SendGuards()
+    {
+        isSendingGuards = true;
+        StateHasChanged();
+
+        await guardService.SendGuards(Guards);
+
+        isSendingGuards = false;
+        StateHasChanged();
+    }
+
+    private async Task DeleteGuards()
+    {
+        await guardService.DeleteGuards(CurrentDate);
+        await LoadGuardsAsync();
+    }
+}

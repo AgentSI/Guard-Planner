@@ -1,0 +1,31 @@
+﻿@using WebUI.Services.WorkerServices
+
+@inject IWorkerService workerService
+
+<MudDialog Width="300px">
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" OnClick="@(() => WorkerDelete(@WorkerId))" ButtonType="ButtonType.Submit" Color="Color.Error">Da</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="Cancel">Anulează</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid WorkerId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task WorkerDelete(Guid workerId)
+    {
+        await workerService.WorkerDelete(workerId);
+
+        Callback?.Invoke();
+        MudDialog.Close();
+    }
+}

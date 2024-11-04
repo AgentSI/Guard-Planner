@@ -1,0 +1,216 @@
+﻿@page "/guards"
+@page "/guards/{WorkerId:guid}"
+@layout MainLayout
+
+@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Pages.Administration.Guards.Components
+@using WebUI.Services.GuardServices
+
+@inject CurrentUserDto currentUser
+@inject IGuardService guardService
+@inject IDialogService dialogsService
+@inject NavigationManager navigationManager
+
+<AuthorizeView Context="view">
+
+    @if (isLoadingType)
+    {
+        <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+    }
+    else
+    {
+        @if (WorkerId.HasValue && currentUser.UserRole == "Administrator")
+        {
+            <AuthorizeView>
+                <div class="d-flex justify-start flex-grow-1 mb-2 mt-4">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="NavigateBack" />
+                </div>
+            </AuthorizeView>
+        }
+        else if (currentUser.UserRole == "Administrator")
+        {
+            <AuthorizeView>
+                <div class="d-flex justify-start flex-grow-1 gap-4 mb-2 mt-4">
+                    <MudButton StartIcon="@Icons.Material.Filled.AutoMode" OnClick="()=>NavigateToGenerate()" Variant="Variant.Outlined" Color="Color.Primary">Generează gărzi</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.CalendarMonth" Href="/guard-calendar" Variant="Variant.Outlined" Color="Color.Primary">Vezi Calendarul de gărzi</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="()=>OpenDialog()" Variant="Variant.Outlined" Color="Color.Primary" Class="ml-auto">Adaugă gardă</MudButton>
+                </div>
+            </AuthorizeView>
+        }
+
+        <MudTable Items="guards" T="GuardDto">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Lista gărzi</MudText>
+                <MudSpacer />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Data
+                    <MudButton OnClick="@(() => SortColumn(nameof(GuardDto.Date)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(GuardDto.Date)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Lucrător
+                    <MudButton OnClick="@(() => SortColumn(nameof(GuardDto.WorkerName)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(GuardDto.WorkerName)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Nr. de ore
+                    <MudButton OnClick="@(() => SortColumn(nameof(GuardDto.Hours)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(GuardDto.Hours)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Operații
+                    <MudButton OnClick="@(() => SortColumn(nameof(GuardDto.NrOperations)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(GuardDto.NrOperations)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Acțiuni</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="context">
+                <MudTd>@context.Date?.ToString("dd.MM.yyyy")</MudTd>
+                <MudTd>@context.WorkerName</MudTd>
+                <MudTd>@context.Hours</MudTd>
+                <MudTd>
+                    <MudLink OnClick="@(async () => await NavigateToOperations(context.Id))">
+                        @context.NrOperations
+                    </MudLink>
+                </MudTd>
+                <MudTd>
+                    @if (currentUser.UserRole == "Administrator")
+                    {
+                        <AuthorizeView Context="edit">
+                            <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id)" Color="Color.Success"><MudIcon Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" /></MudButton>
+                        </AuthorizeView>
+                        <AuthorizeView Context="delete">
+                            <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id, true)" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" /></MudButton>
+                        </AuthorizeView>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudPagination SelectedChanged="SelectPage" Count="@TotalPages" Selected="@CurrentPage" Class="pa-4" />
+            </PagerContent>
+        </MudTable>
+    }
+</AuthorizeView>
+
+@code {
+    public bool isLoadingType = true;
+    private string sortColumn;
+    private bool? sortDirection = null;
+
+    [Parameter]
+    public Guid? WorkerId { get; set; }
+
+    private List<GuardDto> guards = new List<GuardDto>();
+
+    private const int PageSize = 10;
+    public int TotalPages { get; set; }
+    public int CurrentPage { get; set; } = 1;
+    public EventCallback<int> PageChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        isLoadingType = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectPage(int page)
+    {
+        if (page != CurrentPage && page > 0 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            await PageChanged.InvokeAsync(page);
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        var parameters = new PaginationParameter
+            {
+                PageNumber = CurrentPage,
+                PageSize = PageSize,
+                SortBy = sortColumn,
+                SortDescending = sortDirection
+            };
+
+        PaginationResult<GuardDto>? result;
+        if (WorkerId.HasValue) result = await guardService.GetGuards(parameters, WorkerId.Value);
+        else result = await guardService.GetGuards(parameters);
+
+        if (result == null)
+        {
+            guards = new List<GuardDto>();
+        }
+        else
+        {
+            var newList = result.Items.ToList();
+            TotalPages = (int)Math.Ceiling((double)result.TotalItems / PageSize);
+            guards = newList;
+            StateHasChanged();
+        }
+    }
+
+    private void SortColumn(string columnName)
+    {
+        if (sortColumn == columnName)
+        {
+            sortDirection = sortDirection == true ? false : true;
+        }
+        else
+        {
+            sortColumn = columnName;
+            sortDirection = true;
+        }
+
+        LoadData();
+    }
+
+    private string GetSortIcon(string columnName)
+    {
+        if (columnName == sortColumn && sortDirection != null)
+            return sortDirection == true ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
+
+        return Icons.Material.Filled.ArrowDownward;
+    }
+
+    private void OpenDialog(Guid? content = null, bool delete = false)
+    {
+        var dialog = default(IDialogReference);
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("GuardId", content);
+        parameters.Add("callback", callback);
+
+        if (delete) dialog = dialogsService.Show<DeleteComponent>("Sunteți sigur că doriți să ștergeți această gardă ?", parameters, options);
+        else dialog = dialogsService.Show<AddEditGuardComponent>("Detalii gardă", parameters, options);
+    }
+
+    private async Task NavigateToOperations(Guid? guardId)
+    {
+        if (guardId != null)
+        {
+            navigationManager.NavigateTo($"/operations/{guardId}");
+        }
+    }
+
+    private async Task NavigateToGenerate()
+    {
+        navigationManager.NavigateTo($"/generate-guards");
+    }
+
+    private void NavigateBack()
+    {
+        navigationManager.NavigateTo("/workers");
+    }
+}

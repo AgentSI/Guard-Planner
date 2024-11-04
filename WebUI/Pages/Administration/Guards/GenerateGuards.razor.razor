@@ -1,0 +1,234 @@
+﻿@page "/generate-guards"
+
+@using Application.DTOs
+@using WebUI.Pages.Administration.Guards.Components
+@using WebUI.Services.GuardServices
+@using WebUI.Services.VacationServices
+
+@inject ISnackbar Snackbar
+@inject IGuardService guardService
+@inject IVacationService vacationService
+@inject IDialogService dialogsService
+
+<style>
+    .calendar {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        border: 1px solid #ccc;
+    }
+
+    .calendar-header {
+        text-align: center;
+        font-size: 1.5em;
+        padding: 10px;
+    }
+
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr); /* 7 days in a week */
+        gap: 2px;
+        padding: 10px;
+    }
+
+    .calendar-day {
+        border: 1px solid #ccc;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        color: black;
+    }
+
+    .day-header {
+        font-weight: bold;
+        background-color: #f0f0f0;
+    }
+</style>
+
+<br/>
+<MudGrid Spacing="2" AlignItems="Center">
+    <MudItem xs="6" sm="4">
+        <MudDatePicker @bind-Date="SelectedDate"
+                       @bind-Date:after="OnDateChanged"
+                       Label="Selectează Luna și Anul"
+                       For="@(() => SelectedDate)"
+                       DateFormat="MMMM yyyy"
+                       DisableToolbar="true"
+                       Variant="Variant.Outlined" />
+    </MudItem>
+    <MudItem xs="6" sm="2">
+        <MudButton OnClick="GenerateGuards"
+                   StartIcon="@Icons.Material.Filled.AutoAwesome"
+                   Color="Color.Primary"
+                   Variant="Variant.Outlined"
+                   FullWidth="true"
+                   Style="margin-top: 5px; height: 56px;">Generează</MudButton>
+    </MudItem>
+    <MudItem xs="6" sm="2">
+        <MudButton OnClick="SaveGuards"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Color="Color.Success"
+                   Variant="Variant.Outlined"
+                   FullWidth="true"
+                   Style="margin-top: 5px; height: 56px;">Salvează</MudButton>
+    </MudItem>
+</MudGrid>
+<br />
+@if (!string.IsNullOrEmpty(WarningMessage))
+{
+    <div class="alert">@WarningMessage</div>
+}
+@if (Guards != null && Guards.Count > 0)
+{
+    <div class="calendar">
+        <div class="calendar-header">
+            <h3>@SelectedDate.Value.ToString("MMMM yyyy")</h3>
+        </div>
+        <div class="calendar-days">
+        <div class="calendar-day day-header">Luni</div>
+        <div class="calendar-day day-header">Marți</div>
+        <div class="calendar-day day-header">Miercuri</div>
+        <div class="calendar-day day-header">Joi</div>
+        <div class="calendar-day day-header">Vineri</div>
+        <div class="calendar-day day-header">Sâmbătă</div>
+        <div class="calendar-day day-header">Duminică</div>
+
+        @for (int i = 1; i <= DateTime.DaysInMonth(SelectedDate.Value.Year, SelectedDate.Value.Month); i++)
+        {
+            var currentDate = new DateTime(SelectedDate.Value.Year, SelectedDate.Value.Month, i);
+            var guardForDay = Guards.FirstOrDefault(g => g.Date?.Date == currentDate.Date);
+            var color = guardForDay != null ? guardForDay.Color : "white";
+            var workerName = guardForDay != null ? guardForDay.WorkerName : string.Empty;
+
+            if (i == 1)
+            {
+                int firstDayOfWeek = (int)currentDate.DayOfWeek;
+                firstDayOfWeek = (firstDayOfWeek + 6) % 7;
+                for (int j = 0; j < firstDayOfWeek; j++)
+                {
+                    <div class="calendar-day" style="background-color: transparent; border: none;"></div>
+                }
+            }
+
+            <div class="calendar-day" style="background-color:@color; position: relative;">
+                <span>@i</span>
+                @if (!string.IsNullOrEmpty(workerName))
+                {
+                    <div style="font-size: 0.8em; color: black; position: absolute; bottom: 5px; right: 5px;">@workerName</div>
+                }
+            </div>
+        }
+    </div>
+    </div>
+    <br />
+    <h3>Legendă:</h3>
+    <br />
+    <ul style="display: flex; flex-wrap: wrap; padding: 0; list-style: none;">
+        @foreach (var guard in LegentGuards)
+        {
+            <li style="display: flex; align-items: center; margin-right: 10px; margin-bottom: 10px; width: calc(20% - 10px);">
+                <span style="display: inline-block; width: 20px; height: 20px; background-color: @guard.Color; margin-right: 8px;"></span>
+                @guard.WorkerName
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private int previousMonth;
+    private int previousYear;
+
+    private DateTime? SelectedDate { get; set; } = DateTime.Now;
+    private List<GuardDto> Guards { get; set; } = new List<GuardDto>();
+    private List<GuardDto> LegentGuards { get; set; } = new List<GuardDto>();
+
+    private string WarningMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (SelectedDate.HasValue)
+        {
+            previousMonth = SelectedDate.Value.Month;
+            previousYear = SelectedDate.Value.Year;
+        }
+    }
+
+    private async Task OnDateChanged()
+    {
+        if (SelectedDate.HasValue)
+        {
+            int currentMonth = SelectedDate.Value.Month;
+            int currentYear = SelectedDate.Value.Year;
+
+            if (currentMonth != previousMonth || currentYear != previousYear)
+            {
+                await GenerateGuards();
+                previousMonth = currentMonth;
+                previousYear = currentYear;
+            }
+        }
+    }
+
+
+    private async Task GenerateGuards()
+    {
+        // Check the number of workers
+        List<WorkerDto> workers = await guardService.GetWorkers();
+        int count25PercentWorkers = workers.Count(w => w.Percent == 0.25);
+        int count50PercentWorkers = workers.Count(w => w.Percent == 0.5);
+        if (4 * count50PercentWorkers + 2 * count25PercentWorkers < 31)
+        {
+            WarningMessage = "Nu sunt suficienți lucrători pentru a genera graficul!";
+            return;
+        }
+        else
+        {
+            WarningMessage = string.Empty;
+        }
+
+        Guards = await guardService.GenerateGuards(SelectedDate.Value.Month, SelectedDate.Value.Year);
+        LegentGuards = Guards.DistinctBy(g => g.WorkerName).ToList();
+
+        var defaultColors = new List<string>
+        {
+            "#FF6500", "#1E3E62", "#4CC9FE", "#7E60BF", "#E4B1F0",
+            "#72BF78", "#AF1740", "#FEEC37", "#FF77B7", "#B1D690"
+        };
+
+        for (int i = 0; i < LegentGuards.Count; i++)
+        {
+            LegentGuards[i].Color = defaultColors[i % defaultColors.Count];
+        }
+
+        foreach (var guard in Guards)
+        {
+            var legendGuard = LegentGuards.FirstOrDefault(lg => lg.WorkerName == guard.WorkerName);
+            guard.Color = legendGuard?.Color ?? "grey";
+        }
+    }
+
+    private async Task SaveGuards()
+    {
+        var guards = await guardService.GetGuards(SelectedDate.Value.Month, SelectedDate.Value.Year);
+        if (guards.Any())
+        {
+            Snackbar.Add($"Grafic-ul de gărzi pentru {SelectedDate.Value.Month}.{SelectedDate.Value.Year} există.", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("Guards", Guards);
+        parameters.Add("callback", callback);
+
+        var dialog = dialogsService.Show<SaveGuardsDialog>("Confirmați acest grafic de gărzi ?", parameters, options);
+    }
+}

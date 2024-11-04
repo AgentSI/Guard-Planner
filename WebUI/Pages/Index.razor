@@ -1,0 +1,106 @@
+﻿@page "/"
+
+@using Application.DTOs
+@using Microsoft.AspNetCore.Components.Authorization
+@using WebUI.Services.UserAccountServices
+@using WebUI.Services.GuardServices
+
+@inject IGuardService guardService
+@inject NavigationManager navigationManager
+@inject CurrentUserDto currentUser
+@inject CurrentUserService currentUserService
+
+<style>
+    .calendar {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        border: 1px solid #ccc;
+    }
+
+    .calendar-header {
+        text-align: center;
+        font-size: 1.5em;
+        padding: 10px;
+    }
+
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr); /* 7 days in a week */
+        gap: 2px;
+        padding: 10px;
+    }
+
+    .calendar-day {
+        border: 1px solid #ccc;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        color: black;
+    }
+
+    .day-header {
+        font-weight: bold;
+        background-color: #f0f0f0;
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+        @if (isLoadingType)
+        {
+            <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+        }
+        else
+        {
+            <MudContainer Class="w3-display-container w3-grayscale-min w3-display-left w3-text-white" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
+                <div class="pt-4" style="padding:24px;">
+                    <br><span class="w3-hide-small" style="font-size: 50px;">Guard Planner</span>
+                    <br><img src="favicon.png" alt="Guard Planner Image" style="max-width: 80%; height: auto;" />
+                </div>
+            </MudContainer>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer Class="pt-16 w3-display-container w3-grayscale-min w3-display-left w3-text-white" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
+            <div class="pt-16" style="padding:48px;">
+                <br><br><span class="w3-hide-small" style="font-size: 50px;">Bun venit la Platforma Guard Planner</span><br>
+                <p><MudButton Href="login" Variant="Variant.Outlined" Color="Color.Primary">Conectare</MudButton></p><br />
+                <p>Dacă nu aveți un cont, faceți <a href="register" style="color: #2196F3; text-decoration: none;">clic</a> aici pentru a vă înregistra!</p>
+            </div>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public bool isLoadingType = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await currentUserService.InitializeAsync();
+
+        if (!currentUser.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            switch (currentUser.UserRole)
+            {
+                case "Administrator":
+                    navigationManager.NavigateTo("/");
+                    break;
+                case "Member":
+                    navigationManager.NavigateTo("/");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        isLoadingType = false;
+        StateHasChanged();
+    }
+}

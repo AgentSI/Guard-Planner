@@ -1,0 +1,272 @@
+﻿@page "/bon/{OperationId:guid}/{ReceiptId:guid?}"
+
+@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Pages.Administration.Receipts.Components
+@using WebUI.Services.InventoryServices
+@using WebUI.Services.InstrumentServices
+@using WebUI.Services.ReceiptServices
+
+@inject IReceiptService receiptService
+@inject IInventoryService inventoryService
+@inject IInstrumentService instrumentService
+@inject NavigationManager navigationManager
+@inject IDialogService dialogsService
+
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+
+
+<br><h3>Detalii bon</h3><br>
+<EditForm Model="formDetails" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12">
+            <MudTextField @bind-Value="formDetails.Name" For="@(() => formDetails.Name)" Label="Nume bon" ReadOnly Variant="Variant.Outlined" />
+            <MudText Typo="Typo.body2" Color="Color.Primary" Class="mt-1">Numele bonului este generat automat.</MudText>
+        </MudItem>
+        @if (ReceiptId != null)
+        {
+            <MudItem xs="12">
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => OpenDialogInventory(null, ReceiptId))" Variant="Variant.Outlined" Color="Color.Primary" Class="ml-auto">Adaugă inventar</MudButton>
+                <MudTable Items="inventories" T="InventoryDto">
+                    <HeaderContent>
+                        <MudTh>Nume</MudTh>
+                        <MudTh>Cantitate</MudTh>
+                        <MudTh>Unit. de măsură</MudTh>
+                        <MudTh>Acțiuni</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="inventoryContext">
+                        <MudTd>@inventoryContext.Name</MudTd>
+                        <MudTd>@inventoryContext.Amount</MudTd>
+                        <MudTd>@inventoryContext.Measure</MudTd>
+                        <MudTd>
+                            <AuthorizeView Context="edit">
+                                <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialogInventory(inventoryContext.Id, inventoryContext.ReceiptId, false)" Color="Color.Success"><MudIcon Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" /></MudButton>
+                            </AuthorizeView>
+                            <AuthorizeView Context="delete">
+                                <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialogInventory(inventoryContext.Id, null, true)" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" /></MudButton>
+                            </AuthorizeView>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudPagination SelectedChanged="SelectPageInventory" Count="@TotalPages" Selected="@CurrentPage" Class="pa-4" />
+                    </PagerContent>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => OpenDialogInstrument(null, ReceiptId))" Variant="Variant.Outlined" Color="Color.Primary" Class="ml-auto">Adaugă instrument</MudButton>
+                <MudTable Items="instruments" T="InstrumentDto">
+                    <HeaderContent>
+                        <MudTh>Nume</MudTh>
+                        <MudTh>Cantitate</MudTh>
+                        <MudTh>Acțiuni</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="instrumentContext">
+                        <MudTd>@instrumentContext.Name</MudTd>
+                        <MudTd>@instrumentContext.Amount</MudTd>
+                        <MudTd>
+                            <AuthorizeView Context="edit">
+                                <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialogInstrument(instrumentContext.Id, instrumentContext.ReceiptId, false)" Color="Color.Success"><MudIcon Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" /></MudButton>
+                            </AuthorizeView>
+                            <AuthorizeView Context="delete">
+                                <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialogInstrument(instrumentContext.Id, null, true)" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" /></MudButton>
+                            </AuthorizeView>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudPagination SelectedChanged="SelectPageInstrument" Count="@TotalPages" Selected="@CurrentPage" Class="pa-4" />
+                    </PagerContent>
+                </MudTable>
+            </MudItem>
+        }
+        <MudGrid Justify="Justify.FlexEnd">
+            <MudItem>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudGrid>
+</EditForm>
+
+@code {
+    PaginationParameter paginationParameters = new PaginationParameter();
+
+    [Parameter]
+    public Guid OperationId { get; set; }
+
+    [Parameter]
+    public Guid? ReceiptId { get; set; }
+
+    ReceiptDto formDetails = new ReceiptDto();
+    private List<InventoryDto> inventories = new List<InventoryDto>();
+    private List<InstrumentDto> instruments = new List<InstrumentDto>();
+
+    private const int PageSize = 10;
+    public int TotalPages { get; set; }
+    public int CurrentPage { get; set; } = 1;
+    public EventCallback<int> PageChanged { get; set; }
+
+    string message = string.Empty;
+    string messageCssClass = string.Empty;
+    private bool isLoading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var random = new Random();
+        if (ReceiptId.HasValue)
+        {
+            paginationParameters.PageNumber = 1;
+            paginationParameters.PageSize = 10;
+            formDetails = await receiptService.GetReceiptById(ReceiptId.Value);
+            await LoadDataInventory();
+            await LoadDataInstrument();
+        }
+        else formDetails.Name = random.Next(100000, 999999).ToString();
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadDataInventory()
+    {
+        var parameters = new PaginationParameter
+            {
+                PageNumber = CurrentPage,
+                PageSize = PageSize
+            };
+
+        var result = await inventoryService.GetInventories(parameters, ReceiptId.Value);
+
+        if (result == null) inventories = new List<InventoryDto>();
+        else
+        {
+            var newList = result.Items.ToList();
+            TotalPages = (int)Math.Ceiling((double)result.TotalItems / PageSize);
+            inventories = newList;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDataInstrument()
+    {
+        var parameters = new PaginationParameter
+            {
+                PageNumber = CurrentPage,
+                PageSize = PageSize
+            };
+
+        var result = await instrumentService.GetInstruments(parameters, ReceiptId.Value);
+
+        if (result == null) instruments = new List<InstrumentDto>();
+        else
+        {
+            var newList = result.Items.ToList();
+            TotalPages = (int)Math.Ceiling((double)result.TotalItems / PageSize);
+            instruments = newList;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectPageInventory(int page)
+    {
+        if (page != CurrentPage && page > 0 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            await PageChanged.InvokeAsync(page);
+            await LoadDataInventory();
+            await OnInitializedAsync();
+        }
+    }
+
+    private async Task SelectPageInstrument(int page)
+    {
+        if (page != CurrentPage && page > 0 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            await PageChanged.InvokeAsync(page);
+            await LoadDataInstrument();
+            await OnInitializedAsync();
+        }
+    }
+
+    private async Task Save()
+    {
+        bool isSuccessfull = false;
+
+        if (!ReceiptId.HasValue)
+        {
+            var create = new ReceiptDto
+                {
+                    Name = formDetails.Name,
+                    OperationId = OperationId
+                };
+
+            var id = await receiptService.ReceiptCreate(create);
+            formDetails.Id = id;
+            isSuccessfull = id != Guid.Empty;
+        }
+        else
+        {
+            var toEdit = new ReceiptDto
+                {
+                    Id = formDetails.Id,
+                    Name = formDetails.Name,
+                    OperationId = OperationId
+                };
+
+            var result = await receiptService.ReceiptEdit(toEdit);
+            if (result != null) isSuccessfull = true;
+        }
+
+        if (isSuccessfull) navigationManager.NavigateTo($"/bon/{OperationId}/{formDetails.Id}");
+    }
+
+    private void OpenDialogInventory(Guid? inventoryId = null, Guid? receiptId = null, bool delete = false)
+    {
+        var dialog = default(IDialogReference);
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("InventoryId", inventoryId);
+        parameters.Add("ReceiptId", receiptId);
+        parameters.Add("callback", callback);
+
+        if (delete) dialog = dialogsService.Show<InventoryDeleteComponent>("Sunteți sigur că doriți să ștergeți acest inventar ?", parameters, options);
+        else dialog = dialogsService.Show<InventoryComponent>("Detalii inventar", parameters, options);
+    }
+
+    private void OpenDialogInstrument(Guid? instrumentId = null, Guid? receiptId = null, bool delete = false)
+    {
+        var dialog = default(IDialogReference);
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("InstrumentId", instrumentId);
+        parameters.Add("ReceiptId", receiptId);
+        parameters.Add("callback", callback);
+
+        if (delete) dialog = dialogsService.Show<InstrumentDeleteComponent>("Sunteți sigur că doriți să ștergeți acest instrument ?", parameters, options);
+        else dialog = dialogsService.Show<InstrumentComponent>("Detalii instrument", parameters, options);
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("/");
+    }
+}

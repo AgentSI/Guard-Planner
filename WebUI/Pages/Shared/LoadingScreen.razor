@@ -1,0 +1,23 @@
+﻿@if (isLoaded)
+{
+    @ChildContent
+}
+else
+{
+    <MudContainer Class="d-flex align-center flex-grow-1 gap-4" Style="height: 100vh" MaxWidth="MaxWidth.ExtraExtraLarge">
+        <MudProgressCircular Class="relative" Style="margin: 0 auto;" Color="Color.Primary" Size="Size.Medium" Indeterminate="true" />
+    </MudContainer>
+}
+
+@code {
+    bool isLoaded;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Task.Delay(1000);
+        isLoaded = true;
+    }
+}

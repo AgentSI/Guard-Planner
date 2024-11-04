@@ -1,0 +1,105 @@
+﻿@using Application.DTOs
+@using WebUI.Services.InventoryServices
+
+@inject IInventoryService inventoryService
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="formDetails" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Name" For="@(() => formDetails.Name)" Label="Nume" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Amount" For="@(() => formDetails.Amount)" Label="Cantitate" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Measure" For="@(() => formDetails.Measure)" Label="Unit. de măsură" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                        <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid? InventoryId { get; set; }
+
+    [Parameter]
+    public Guid ReceiptId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    InventoryDto formDetails = new InventoryDto();
+
+    string message = string.Empty;
+    string messageCssClass = string.Empty;
+    private bool isLoading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (InventoryId.HasValue)
+        {
+            formDetails = await inventoryService.GetInventoryById(InventoryId.Value);
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        bool isSuccessfull = false;
+
+        if (!InventoryId.HasValue)
+        {
+            var create = new InventoryDto
+                {
+                    Name = formDetails.Name,
+                    Amount = formDetails.Amount,
+                    Measure = formDetails.Measure,
+                    ReceiptId = ReceiptId
+                };
+
+            var id = await inventoryService.InventoryCreate(create);
+
+            isSuccessfull = id != Guid.Empty;
+        }
+        else
+        {
+            var toEdit = new InventoryDto
+                {
+                    Id = formDetails.Id,
+                    Name = formDetails.Name,
+                    Amount = formDetails.Amount,
+                    Measure = formDetails.Measure,
+                    ReceiptId = ReceiptId
+                };
+
+            var result = await inventoryService.InventoryEdit(toEdit);
+            if (result != null) isSuccessfull = true;
+        }
+
+        if (isSuccessfull) Callback?.Invoke();
+
+        MudDialog.Close();
+    }
+}

@@ -1,0 +1,93 @@
+﻿@page "/percents"
+@layout MainLayout
+
+@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Pages.Administration.Percents.Components
+@using WebUI.Services.WorkerServices
+
+@inject IWorkerService workerService
+@inject IDialogService dialogsService
+
+<AuthorizeView Context="view">
+
+    @if (isLoadingType)
+    {
+        <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+    }
+    else
+    {
+        <AuthorizeView>
+            <div class="d-flex justify-end flex-grow-1 gap-4 mb-2 mt-4">
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="()=>OpenDialog()" Variant="Variant.Outlined" Color="Color.Primary" Class="ml-auto">Adaugă procent</MudButton>
+            </div>
+        </AuthorizeView>
+
+        <MudTable Items="percents" T="PercentDto">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Procent gardă</MudText>
+                <MudSpacer />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Procent gardă</MudTh>
+                <MudTh>Acțiuni</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="context">
+                <MudTd>@context.Value</MudTd>
+                <MudTd>
+                    <AuthorizeView Context="delete">
+                        <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id, true)" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" /></MudButton>
+                    </AuthorizeView>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</AuthorizeView>
+
+@code {
+    public bool isLoadingType = true;
+
+    private List<PercentDto> percents = new List<PercentDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        isLoadingType = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        var result = await workerService.GetPercentList();
+
+        if (result == null)
+        {
+            percents = new List<PercentDto>();
+        }
+        else
+        {
+            var newList = result.ToList();
+            percents = newList;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenDialog(Guid? content = null, bool delete = false)
+    {
+        var dialog = default(IDialogReference);
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("PercentId", content);
+        parameters.Add("callback", callback);
+
+        if (delete) dialog = dialogsService.Show<DeleteComponent>("Sunteți sigur că doriți să ștergeți acest procent gardă ?", parameters, options);
+        else dialog = dialogsService.Show<AddEditPercentComponent>("Detalii procent gardă", parameters, options);
+    }
+}

@@ -1,0 +1,120 @@
+﻿@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Services.VacationServices
+@using WebUI.Services.GuardServices
+
+@inject IGuardService guardService
+@inject IVacationService vacationService
+@inject CurrentUserDto currentUser
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="formDetails" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="string" MultiSelection="false" @bind-Value="formDetails.WorkerName" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="form-select-sm" Placeholder="Lucrător">
+                        @foreach (var worker in workers)
+                        {
+                            <MudSelectItem Value="@worker" Class="form-select-sm">@worker</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <ValidationMessage For="@(() => formDetails.WorkerName)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="formDetails.StartDate" Label="De la data" For="@(() => formDetails.StartDate)" DisableToolbar="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="formDetails.EndDate" Label="Până la data" For="@(() => formDetails.EndDate)" DisableToolbar="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Reason" For="@(() => formDetails.Reason)" Label="Motiv" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                        <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    PaginationParameter paginationParameters = new PaginationParameter();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid? VacationId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    VacationDto formDetails = new VacationDto();
+    private List<WorkerDto> workersDto = new List<WorkerDto>();
+    private List<string> workers = new List<string>();
+
+    string message = string.Empty;
+    string messageCssClass = string.Empty;
+    private bool isLoading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (VacationId.HasValue)
+        {
+            formDetails = await vacationService.GetVacationById(VacationId.Value);
+        }
+
+        isLoading = false;
+        workersDto = await guardService.GetWorkers();
+        workers = workersDto.Select(w => w.Email).ToList();
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        bool isSuccessfull = false;
+
+        if (!VacationId.HasValue)
+        {
+            var create = new VacationDto
+                {
+                    WorkerName = formDetails.WorkerName,
+                    StartDate = formDetails.StartDate,
+                    EndDate = formDetails.EndDate,
+                    Reason = formDetails.Reason
+                };
+
+            var response = await vacationService.VacationCreate(create);
+            if (response.Success) isSuccessfull = true;
+        }
+        else
+        {
+            var toEdit = new VacationDto
+                {
+                    Id = formDetails.Id,
+                    WorkerName = formDetails.WorkerName,
+                    StartDate = formDetails.StartDate,
+                    EndDate = formDetails.EndDate,
+                    Reason = formDetails.Reason
+                };
+
+            var result = await vacationService.VacationEdit(toEdit);
+            if (result != null) isSuccessfull = true;
+        }
+
+        if (isSuccessfull) Callback?.Invoke();
+
+        MudDialog.Close();
+    }
+}

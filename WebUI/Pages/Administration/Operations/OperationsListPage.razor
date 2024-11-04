@@ -1,0 +1,210 @@
+﻿@page "/operations"
+@page "/operations/{GuardId:guid}"
+@layout MainLayout
+
+@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Pages.Administration.Operations.Components
+@using WebUI.Services.OperationServices
+
+@inject CurrentUserDto currentUser
+@inject IOperationService operationService
+@inject IDialogService dialogsService
+@inject NavigationManager navigationManager
+
+<AuthorizeView Context="view">
+
+    @if (isLoadingType)
+    {
+        <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+    }
+    else
+    {
+        @if (GuardId.HasValue)
+        {
+            <AuthorizeView>
+                <div class="d-flex justify-start flex-grow-1 gap-4 mb-2 mt-4">
+                    @if (currentUser.UserRole == "Administrator")
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="NavigateBack"/>
+                    }
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="()=>OpenDialog()" Variant="Variant.Outlined" Color="Color.Primary" Class="ml-auto">Adaugă operație</MudButton>
+                </div>
+            </AuthorizeView>
+        }
+
+        <br />
+        <MudTable Items="operations" T="OperationDto">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Lista operații</MudText>
+                <MudSpacer />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Data
+                    <MudButton OnClick="@(() => SortColumn(nameof(OperationDto.Date)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(OperationDto.Date)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Tip operație
+                    <MudButton OnClick="@(() => SortColumn(nameof(OperationDto.Type)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(OperationDto.Type)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Ora de început
+                    <MudButton OnClick="@(() => SortColumn(nameof(OperationDto.StartTime)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(OperationDto.StartTime)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Ora de sfârșit
+                    <MudButton OnClick="@(() => SortColumn(nameof(OperationDto.EndTime)))">
+                        <MudIcon Icon="@(GetSortIcon(nameof(OperationDto.EndTime)))" Size="@Size.Small" />
+                    </MudButton>
+                </MudTh>
+                <MudTh>Bon</MudTh>
+                <MudTh>Acțiuni</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="context">
+                <MudTd>@context.Date?.ToString("dd.MM.yyyy")</MudTd>
+                <MudTd>@context.Type</MudTd>
+                <MudTd>@context.StartTime</MudTd>
+                <MudTd>@context.EndTime</MudTd>
+                <MudTd>
+                    <MudLink OnClick="@(async () => await NavigateToReceipt(context.Id, context.ReceiptId))">
+                        Vezi Bon
+                    </MudLink>
+                </MudTd>
+                <MudTd>
+                    @if (GuardId.HasValue)
+                    {
+                        <AuthorizeView Context="edit">
+                            <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id)" Color="Color.Success"><MudIcon Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" /></MudButton>
+                        </AuthorizeView>
+                        <AuthorizeView Context="delete">
+                            <MudButton Variant="Variant.Outlined" OnClick="()=>OpenDialog(context.Id, true)" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" /></MudButton>
+                        </AuthorizeView>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudPagination SelectedChanged="SelectPage" Count="@TotalPages" Selected="@CurrentPage" Class="pa-4" />
+            </PagerContent>
+        </MudTable>
+    }
+</AuthorizeView>
+
+@code {
+    public bool isLoadingType = true;
+    private string sortColumn;
+    private bool? sortDirection = null;
+
+    [Parameter]
+    public Guid? GuardId { get; set; }
+
+    private List<OperationDto> operations = new List<OperationDto>();
+
+    private const int PageSize = 10;
+    public int TotalPages { get; set; }
+    public int CurrentPage { get; set; } = 1;
+    public EventCallback<int> PageChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        isLoadingType = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectPage(int page)
+    {
+        if (page != CurrentPage && page > 0 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            await PageChanged.InvokeAsync(page);
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        var parameters = new PaginationParameter
+            {
+                PageNumber = CurrentPage,
+                PageSize = PageSize,
+                SortBy = sortColumn,
+                SortDescending = sortDirection
+            };
+
+        PaginationResult<OperationDto>? result;
+        if (GuardId.HasValue) result = await operationService.GetOperations(parameters, GuardId.Value);
+        else result = await operationService.GetOperations(parameters);
+
+        if (result == null)
+        {
+            operations = new List<OperationDto>();
+        }
+        else
+        {
+            var newList = result.Items.ToList();
+            TotalPages = (int)Math.Ceiling((double)result.TotalItems / PageSize);
+            operations = newList;
+            StateHasChanged();
+        }
+    }
+
+    private void SortColumn(string columnName)
+    {
+        if (sortColumn == columnName)
+        {
+            sortDirection = sortDirection == true ? false : true;
+        }
+        else
+        {
+            sortColumn = columnName;
+            sortDirection = true;
+        }
+
+        LoadData();
+    }
+
+    private string GetSortIcon(string columnName)
+    {
+        if (columnName == sortColumn && sortDirection != null)
+            return sortDirection == true ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
+
+        return Icons.Material.Filled.ArrowDownward;
+    }
+
+    private void OpenDialog(Guid? content = null, bool delete = false)
+    {
+        var dialog = default(IDialogReference);
+        var parameters = new DialogParameters();
+        var callback = async () => { await OnInitializedAsync(); };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MudBlazor.MaxWidth.Large
+            };
+
+        parameters.Add("OperationId", content);
+        parameters.Add("GuardId", GuardId);
+        parameters.Add("callback", callback);
+
+        if (delete) dialog = dialogsService.Show<DeleteComponent>("Sunteți sigur că doriți să ștergeți această operație ?", parameters, options);
+        else dialog = dialogsService.Show<AddEditOperationComponent>("Detalii operație", parameters, options);
+    }
+
+    private void NavigateBack()
+    {
+        navigationManager.NavigateTo("/guards");
+    }
+
+    private async Task NavigateToReceipt(Guid operationId, Guid? receiptId)
+    {
+        if (receiptId != Guid.Empty)
+        {
+            navigationManager.NavigateTo($"/bon/{operationId}/{receiptId}");
+        }
+        else navigationManager.NavigateTo($"/bon/{operationId}");
+    }
+}

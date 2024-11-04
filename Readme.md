@@ -1,6 +1,7 @@
 Guard Planner este un sistem digital dedicat gestionării eficiente a programului de gărzi și resurselor utilizate de personalul medical în operații. Acest instrument inovator își propune să optimizeze activitățile medicale, asigurând o funcționare fluentă și eficientă a unităților medicale.
 
-![[Screenshot 2024-11-04 213849.png]]
+![Screenshot 2024-11-04 213849](https://github.com/user-attachments/assets/a17c4a0e-ede7-4abe-bf36-98247a35a385)
+
 ## Scopul sistemului
 
 - **Optimizarea programului de lucru**: Permite gestionarea eficientă a programului de gărzi al lucrătorilor medicali, astfel încât să se reducă suprasolicitarea și să se îmbunătățească echilibrul între viața profesională și personală.
@@ -19,5 +20,5 @@ Guard Planner contribuie la:
 - **Reducerea stresului**: Prin optimizarea programului de gărzi, lucrătorii medicali pot evita suprasolicitarea și pot avea un program mai previzibil.
 - **Îmbunătățirea eficienței**: Gestionarea resurselor în timp real ajută la minimizarea timpului pierdut și la maximizarea eficienței operațiunilor.
 - **Colaborare mai bună**: Sistemul permite o comunicare mai eficientă între membrii echipei, facilitând coordonarea în timpul intervențiilor medicale.
-
-![[Screenshot 2024-11-04 214058.png]]
+  
+![Screenshot 2024-11-04 214058](https://github.com/user-attachments/assets/14734e6e-fdce-49b3-bbcf-27803eedc6d5)

@@ -61,9 +61,16 @@
                 <MudTd>@context.NoDaysVacation</MudTd>
                 <MudTd>@context.Percent</MudTd>
                 <MudTd>
-                    <MudLink OnClick="@(async () => await NavigateToGuards(context.Id))">
-                        Gărzi
-                    </MudLink>
+                    @if (@context.Percent != 0)
+                    {
+                        <MudLink OnClick="@(async () => await NavigateToGuards(context.Id))">
+                            Gărzi
+                        </MudLink>
+                    }
+                    else
+                    {
+                        @:Nu are gărzi
+                    }
                 </MudTd>
                 <MudTd>
                     <AuthorizeView Context="edit">

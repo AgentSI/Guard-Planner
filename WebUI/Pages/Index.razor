@@ -10,43 +10,6 @@
 @inject CurrentUserDto currentUser
 @inject CurrentUserService currentUserService
 
-<style>
-    .calendar {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        border: 1px solid #ccc;
-    }
-
-    .calendar-header {
-        text-align: center;
-        font-size: 1.5em;
-        padding: 10px;
-    }
-
-    .calendar-days {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr); /* 7 days in a week */
-        gap: 2px;
-        padding: 10px;
-    }
-
-    .calendar-day {
-        border: 1px solid #ccc;
-        height: 50px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-        color: black;
-    }
-
-    .day-header {
-        font-weight: bold;
-        background-color: #f0f0f0;
-    }
-</style>
-
 <AuthorizeView>
     <Authorized>
         @if (isLoadingType)
@@ -65,10 +28,11 @@
     </Authorized>
     <NotAuthorized>
         <MudContainer Class="pt-16 w3-display-container w3-grayscale-min w3-display-left w3-text-white" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
-            <div class="pt-16" style="padding:48px;">
-                <br><br><span class="w3-hide-small" style="font-size: 50px;">Bun venit la Platforma Guard Planner</span><br>
-                <p><MudButton Href="login" Variant="Variant.Outlined" Color="Color.Primary">Conectare</MudButton></p><br />
-                <p>Dacă nu aveți un cont, faceți <a href="register" style="color: #2196F3; text-decoration: none;">clic</a> aici pentru a vă înregistra!</p>
+            <div class="w3-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.4); z-index: 1;"></div>
+            <div class="pt-16" style="padding:48px; position: relative; z-index: 2;">
+                <br><br><span class="w3-hide-small" style="font-size: 50px; font-weight: bold;">Bun venit la Platforma Guard Planner</span><br>
+                <p><MudButton Href="login" Variant="Variant.Outlined" Color="Color.Primary" Style="font-size: 20px; padding: 12px 24px;">Conectare</MudButton></p><br />
+                <p style="font-size: 18px; color: #D3D3D3;">Dacă nu aveți un cont, faceți <a href="register" style="color: #2196F3; text-decoration: none; font-weight: bold;">clic aici</a> pentru a vă înregistra !</p>
             </div>
         </MudContainer>
     </NotAuthorized>
@@ -92,7 +56,7 @@
                 case "Administrator":
                     navigationManager.NavigateTo("/");
                     break;
-                case "Member":
+                case "Lucrător":
                     navigationManager.NavigateTo("/");
                     break;
                 default:

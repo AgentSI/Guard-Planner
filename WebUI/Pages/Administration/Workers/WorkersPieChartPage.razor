@@ -27,12 +27,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        
         var parameters = new PaginationParameter { PageNumber = 1, PageSize = 100 };
         var result = await workerService.GetWorkers(parameters);
         var workers = result?.Items.ToList();
 
         var percentGroups = workers
+            .Where(w => w.Percent != 0)
             .GroupBy(w => w.Percent)
             .Select(g => new { Percent = g.Key, Count = g.Count() })
             .ToList();

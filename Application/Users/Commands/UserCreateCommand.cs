@@ -45,7 +45,7 @@ namespace Application.Users.Commands
                 };
             }
             var role = await _appDbContext.UserRoles.Where(r => r.RoleName == request.UserRole).FirstOrDefaultAsync();
-            if (role == null) role = await _appDbContext.UserRoles.Where(r => r.RoleName == "Member").FirstOrDefaultAsync();
+            if (role == null) role = await _appDbContext.UserRoles.Where(r => r.RoleName == "Lucrător").FirstOrDefaultAsync();
             var createUser = new User
             {
                 Email = request.Email,
@@ -58,6 +58,15 @@ namespace Application.Users.Commands
             };
 
             _appDbContext.Users.Add(createUser);
+
+            var createWorker = new Worker
+            {
+                Name = request.Username,
+                Email = request.Email
+            };
+
+            _appDbContext.Workers.Add(createWorker);
+
             await _appDbContext.SaveChangesAsync(cancellationToken);
 
             return new UserCreateResultDto

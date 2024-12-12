@@ -4,65 +4,132 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using WebUI.Services.UserAccountServices
 
+@inject ISnackbar snackbar
 @inject NavigationManager navigationManager
 @inject IUserAccountService userService
 @inject CurrentUserService currentUserService
 
-<MudContainer Class="d-flex align-center flex-grow-1 gap-4" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
-    <MudStack Class="relative" Style="margin: 0 auto">
-        <div class="text-danger">
-            <span>@errorMessage</span>
-        </div>
+<style>
+    .form-container {
+        width: 320px;
+        border-radius: 0.75rem;
+        background-color: rgba(17, 24, 39, 1);
+        padding: 2rem;
+        color: rgba(243, 244, 246, 1);
+    }
 
+    .title {
+        text-align: center;
+        font-size: 1.5rem;
+        line-height: 2rem;
+        font-weight: 700;
+    }
+
+    .form {
+        margin-top: 1.5rem;
+    }
+
+    .input-group {
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+
+        .input-group label {
+            display: block;
+            color: rgba(156, 163, 175, 1);
+            margin-bottom: 4px;
+        }
+
+        .input-group input {
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid rgba(55, 65, 81, 1);
+            outline: 0;
+            background-color: rgba(17, 24, 39, 1);
+            padding: 0.75rem 1rem;
+            color: rgba(243, 244, 246, 1);
+        }
+
+            .input-group input:focus {
+                border-color: rgba(167, 139, 250);
+            }
+
+    .forgot {
+        display: flex;
+        justify-content: flex-end;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        color: rgba(156, 163, 175,1);
+        margin: 8px 0 14px 0;
+    }
+
+        .forgot a, .signup a {
+            color: rgba(243, 244, 246, 1);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+            .forgot a:hover, .signup a:hover {
+                text-decoration: underline rgba(167, 139, 250, 1);
+            }
+
+    .sign {
+        display: block;
+        width: 100%;
+        background-color: rgba(167, 139, 250, 1);
+        padding: 0.75rem;
+        text-align: center;
+        color: rgba(17, 24, 39, 1);
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 600;
+    }
+
+    .signup {
+        text-align: center;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        color: rgba(156, 163, 175, 1);
+    }
+
+    .centered-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 70vh;
+    }
+</style>
+
+<MudContainer Class="centered-container" MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudStack Class="relative" Style="margin: 0 auto">
         <EditForm Model="user" OnValidSubmit="HandleLogin">
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="user.Email" Label="Email" For="@(() => user.Email)" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="user.Password" For="@(() => user.Password)" Label="Parola" Required="true" Variant="Variant.Outlined" InputType="InputType.Password" />
-                </MudItem>
-            </MudGrid>
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudButton OnClick="FillCredentialAdmin" Variant="Variant.Filled" Color="Color.Primary">
-                        Completați credențialele admin
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudButton OnClick="FillCredentialWorker" Variant="Variant.Filled" Color="Color.Primary">
-                        Completați credențialele Lucrător
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="12">
-                    @if (isLoggingIn)
-                    {
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Style="text-align: right" Class="mt-5">
-                            <MudProgressCircular Color="Color.Default" Size="Size.Small" Indeterminate="true" />
-                            &nbsp; Conectare...
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                            Conectare
-                        </MudButton>
-                    }
-                </MudItem>
-                <MudItem xs="12">
-                    <MudButton OnClick="NavigateToResetPass" Variant="Variant.Filled" Color="Color.Primary">
-                        Resetare parolă
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToRegister">
-                        Înregistrare
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-          
+            <MudContainer Class="d-flex align-center flex-grow-1 gap-4" Style="height: 100%" MaxWidth="MaxWidth.ExtraExtraLarge">
+                <MudStack Class="relative" Style="margin: 3 auto">
+                    <div class="form-container">
+                        <p class="title">Conectează-te</p>
+                        <br />
+                        <div class="input-group">
+                            <label style="color:white" for="email">Email</label>
+                            <InputText @bind-Value="user.Email" id="email" class="input" placeholder="Introdu email" />
+                        </div>
+                        <br />
+                        <div class="input-group">
+                            <label style="color:white" for="password">Parola</label>
+                            <InputText @bind-Value="user.Password" id="password" type="password" class="input" placeholder="Introdu parola" />
+                            <div class="forgot">
+                                <a href="reset-password">Resetare parolă ?</a>
+                            </div>
+                        </div>
+                        <button class="sign" type="submit">Conectare</button>
+                        <br />
+                        <div class="signup">
+                            Nu ai cont ? <a href="register">Înregistrează-te</a>
+                        </div>
+                    </div>
+                </MudStack>
+            </MudContainer>
         </EditForm>
-        
     </MudStack>
 </MudContainer>
 
@@ -72,23 +139,11 @@
     private bool isLoggingIn = false;
     private string errorMessage = string.Empty;
 
-    private void FillCredentialAdmin()
-    {
-        user.Email = "admin@mail.com";
-        user.Password = "Parola11a#";
-    }
-
-    private void FillCredentialWorker()
-    {
-        user.Email = "ana@mail.com";
-        user.Password = "Parola11a#";
-    }
-
     private async Task HandleLogin()
     {
         if (user.Email == null || user.Password == null)
         {
-            errorMessage = "Vă rugăm să introduceți atât adresa de e-mail, cât și parola";
+            snackbar.Add("Vă rugăm să introduceți atât adresa de e-mail, cât și parola.", Severity.Error);
             return;
         }
 
@@ -105,18 +160,9 @@
         else
         {
             errorMessage = result.ResponseMessage;
+            snackbar.Add(errorMessage, Severity.Error);
         }
 
         isLoggingIn = false;
-    }
-
-    private void NavigateToRegister()
-    {
-        navigationManager.NavigateTo("/register");
-    }
-
-    private void NavigateToResetPass()
-    {
-        navigationManager.NavigateTo("/reset-password");
     }
 }

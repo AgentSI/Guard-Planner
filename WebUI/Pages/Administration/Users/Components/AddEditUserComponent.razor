@@ -21,6 +21,12 @@
                 <MudItem xs="12">
                     <MudTextField @bind-Value="userFormDetails.Email" For="@(() => userFormDetails.Email)" Label="Email" Variant="Variant.Outlined" />
                 </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="userFormDetails.Birthday" For="@(() => userFormDetails.Birthday)" Label="Data nașterii" DateFormat="dd.MM.yyyy" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="userFormDetails.Phone" For="@(() => userFormDetails.Phone)" Label="Telefon de contact" Variant="Variant.Outlined" />
+                </MudItem>
                 <MudItem xs="12">
                     <MudSelect T="string" MultiSelection="false" @bind-Value="userFormDetails.Role" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="form-select-sm" Placeholder="Rol">
                         @foreach (var role in roles)
@@ -97,8 +103,8 @@
                     Role = userFormDetails.Role
                 };
 
-            var result = await userService.UserEdit(userToEdit);
-            if (result != null) isSuccessfull = true;
+            await userService.UserEdit(userToEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

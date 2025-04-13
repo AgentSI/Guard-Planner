@@ -3,32 +3,21 @@ using MediatR;
 
 namespace Application.Users.Queries
 {
-    public class VerifyConfirmationCodeQuery : IRequest<bool>
+    public class VerifyConfirmationCodeQuery(string email, string code) : IRequest<bool>
     {
-        public VerifyConfirmationCodeQuery(string email, string code)
-        {
-            Email = email;
-            Code = code;
-        }
-
-        public string Email { get; set; }
-        public string Code { get; set; }
+        public string Email { get; set; } = email;
+        public string Code { get; set; } = code;
     }
 
-    public class VerifyConfirmationCodeQueryHandler : IRequestHandler<VerifyConfirmationCodeQuery, bool>
+    public class VerifyConfirmationCodeQueryHandler(IAppDbContext appDbContext) : IRequestHandler<VerifyConfirmationCodeQuery, bool>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public VerifyConfirmationCodeQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<bool> Handle(VerifyConfirmationCodeQuery request, CancellationToken cancellationToken)
+        public Task<bool> Handle(VerifyConfirmationCodeQuery request, CancellationToken cancellationToken)
         {
             var user = _appDbContext.Users.Where(p => p.Email == request.Email).FirstOrDefault();
-            if (user.SecurityCode == request.Code) return true;
-            else return false;
+            if (user!.SecurityCode == request.Code) return Task.FromResult(true);
+            else return Task.FromResult(false);
         }
     }
 }

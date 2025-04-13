@@ -5,26 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Guards.Queries
 {
-    public class GuardsGetQuery : IRequest<List<GuardDto>>
+    public class GuardsGetQuery(int month, int year) : IRequest<List<GuardDto>>
     {
-        public GuardsGetQuery(int month, int year)
-        {
-            Month = month;
-            Year = year;
-        }
-
-        public int Month { get; set; }
-        public int Year { get; set; }
+        public int Month { get; set; } = month;
+        public int Year { get; set; } = year;
     }
 
-    public class GuardsGetQueryHandler : IRequestHandler<GuardsGetQuery, List<GuardDto>>
+    public class GuardsGetQueryHandler(IAppDbContext appDbContext) : IRequestHandler<GuardsGetQuery, List<GuardDto>>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public GuardsGetQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<List<GuardDto>> Handle(GuardsGetQuery request, CancellationToken cancellationToken)
         {

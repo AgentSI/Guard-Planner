@@ -1,6 +1,7 @@
 ﻿@page "/generate-guards"
 
 @using Application.DTOs
+@using MudBlazor
 @using WebUI.Pages.Administration.Guards.Components
 @using WebUI.Services.GuardServices
 @using WebUI.Services.VacationServices
@@ -47,15 +48,14 @@
     }
 </style>
 
-<br/>
-<MudGrid Spacing="2" AlignItems="Center">
+<br />
+<MudGrid Spacing="2">
     <MudItem xs="6" sm="4">
         <MudDatePicker @bind-Date="SelectedDate"
                        @bind-Date:after="OnDateChanged"
                        Label="Selectează Luna și Anul"
                        For="@(() => SelectedDate)"
                        DateFormat="MMMM yyyy"
-                       DisableToolbar="true"
                        Variant="Variant.Outlined" />
     </MudItem>
     <MudItem xs="6" sm="2">
@@ -87,40 +87,40 @@
             <h3>@SelectedDate.Value.ToString("MMMM yyyy")</h3>
         </div>
         <div class="calendar-days">
-        <div class="calendar-day day-header">Luni</div>
-        <div class="calendar-day day-header">Marți</div>
-        <div class="calendar-day day-header">Miercuri</div>
-        <div class="calendar-day day-header">Joi</div>
-        <div class="calendar-day day-header">Vineri</div>
-        <div class="calendar-day day-header">Sâmbătă</div>
-        <div class="calendar-day day-header">Duminică</div>
+            <div class="calendar-day day-header">Luni</div>
+            <div class="calendar-day day-header">Marți</div>
+            <div class="calendar-day day-header">Miercuri</div>
+            <div class="calendar-day day-header">Joi</div>
+            <div class="calendar-day day-header">Vineri</div>
+            <div class="calendar-day day-header">Sâmbătă</div>
+            <div class="calendar-day day-header">Duminică</div>
 
-        @for (int i = 1; i <= DateTime.DaysInMonth(SelectedDate.Value.Year, SelectedDate.Value.Month); i++)
-        {
-            var currentDate = new DateTime(SelectedDate.Value.Year, SelectedDate.Value.Month, i);
-            var guardForDay = Guards.FirstOrDefault(g => g.Date?.Date == currentDate.Date);
-            var color = guardForDay != null ? guardForDay.Color : "white";
-            var workerName = guardForDay != null ? guardForDay.WorkerName : string.Empty;
-
-            if (i == 1)
+            @for (int i = 1; i <= DateTime.DaysInMonth(SelectedDate.Value.Year, SelectedDate.Value.Month); i++)
             {
-                int firstDayOfWeek = (int)currentDate.DayOfWeek;
-                firstDayOfWeek = (firstDayOfWeek + 6) % 7;
-                for (int j = 0; j < firstDayOfWeek; j++)
-                {
-                    <div class="calendar-day" style="background-color: transparent; border: none;"></div>
-                }
-            }
+                var currentDate = new DateTime(SelectedDate.Value.Year, SelectedDate.Value.Month, i);
+                var guardForDay = Guards.FirstOrDefault(g => g.Date?.Date == currentDate.Date);
+                var color = guardForDay != null ? guardForDay.Color : "white";
+                var workerName = guardForDay != null ? guardForDay.WorkerName : string.Empty;
 
-            <div class="calendar-day" style="background-color:@color; position: relative;">
-                <span>@i</span>
-                @if (!string.IsNullOrEmpty(workerName))
+                if (i == 1)
                 {
-                    <div style="font-size: 0.8em; color: black; position: absolute; bottom: 5px; right: 5px;">@workerName</div>
+                    int firstDayOfWeek = (int)currentDate.DayOfWeek;
+                    firstDayOfWeek = (firstDayOfWeek + 6) % 7;
+                    for (int j = 0; j < firstDayOfWeek; j++)
+                    {
+                        <div class="calendar-day" style="background-color: transparent; border: none;"></div>
+                    }
                 }
-            </div>
-        }
-    </div>
+
+                <div class="calendar-day" style="background-color:@color; position: relative;">
+                    <span>@i</span>
+                    @if (!string.IsNullOrEmpty(workerName))
+                    {
+                        <div style="font-size: 0.8em; color: black; position: absolute; bottom: 5px; right: 5px;">@workerName</div>
+                    }
+                </div>
+            }
+        </div>
     </div>
     <br />
     <h3>Legendă:</h3>
@@ -174,19 +174,7 @@
 
     private async Task GenerateGuards()
     {
-        // Check the number of workers
         List<WorkerDto> workers = await guardService.GetWorkers();
-        int count25PercentWorkers = workers.Count(w => w.Percent == 0.25);
-        int count50PercentWorkers = workers.Count(w => w.Percent == 0.5);
-        if (4 * count50PercentWorkers + 2 * count25PercentWorkers < 31)
-        {
-            WarningMessage = "Nu sunt suficienți lucrători pentru a genera graficul!";
-            return;
-        }
-        else
-        {
-            WarningMessage = string.Empty;
-        }
 
         Guards = await guardService.GenerateGuards(SelectedDate.Value.Month, SelectedDate.Value.Year);
         LegentGuards = Guards.DistinctBy(g => g.WorkerName).ToList();
@@ -222,7 +210,6 @@
         var callback = async () => { await OnInitializedAsync(); };
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 

@@ -4,30 +4,20 @@ using MediatR;
 
 namespace Application.Users.Queries
 {
-    public class UserGetByIdQuery : IRequest<UserDto>
+    public class UserGetByIdQuery(Guid id) : IRequest<UserDto>
     {
-        public UserGetByIdQuery(Guid id)
-        {
-            Id = id;
-        }
-
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
     }
 
-    public class UserGetByIdQueryHandler : IRequestHandler<UserGetByIdQuery, UserDto>
+    public class UserGetByIdQueryHandler(IAppDbContext appDbContext) : IRequestHandler<UserGetByIdQuery, UserDto>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public UserGetByIdQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<UserDto> Handle(UserGetByIdQuery request, CancellationToken cancellationToken)
+        public Task<UserDto> Handle(UserGetByIdQuery request, CancellationToken cancellationToken)
         {
             var user = _appDbContext.Users.Where(p => p.Id == request.Id).Select(UserAccountMapping.UserProjection).FirstOrDefault();
-            if (user != null) return user;
-            else return null;
+            if (user != null) return Task.FromResult(user);
+            else return Task.FromResult(new UserDto { });
         }
     }
 }

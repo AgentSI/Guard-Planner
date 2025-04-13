@@ -18,6 +18,7 @@ namespace Application.Workers
                     Email = u.Email,
                     Specialization = u.Specialization,
                     Available = u.Available,
+                    IsWorkDay = u.IsWorkDay,
                     IsGuard = u.IsGuard,
                     Percent = u.Percent,
                     NoDaysVacation = u.NoDaysVacation

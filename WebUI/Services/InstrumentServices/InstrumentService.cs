@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.InstrumentServices
 {
-    public class InstrumentService : IInstrumentService
+    public class InstrumentService(HttpClient httpClient, ISnackbar snackbar) : IInstrumentService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public InstrumentService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<InstrumentDto>> GetInstruments(PaginationParameter paginationParameter, Guid guardId)
         {

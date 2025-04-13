@@ -6,12 +6,8 @@ using System.Security.Claims;
 
 namespace Application
 {
-    public abstract class RequestHandler<TRequest, TResponse> : Session, IRequestHandler<TRequest, TResponse> where TRequest : IRequest<TResponse>
+    public abstract class RequestHandler<TRequest, TResponse>(IServiceProvider serviceProvider) : Session(serviceProvider), IRequestHandler<TRequest, TResponse> where TRequest : IRequest<TResponse>
     {
-        protected RequestHandler(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
-
         public abstract Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken);
     }
 
@@ -25,15 +21,15 @@ namespace Application
 
         public Session(IServiceProvider serviceProvider)
         {
-            Configuration = (IConfiguration)serviceProvider.GetService(typeof(IConfiguration));
-            HttpContextAccessor = (IHttpContextAccessor)serviceProvider.GetService(typeof(IHttpContextAccessor));
+            Configuration = (IConfiguration)serviceProvider.GetService(typeof(IConfiguration))!;
+            HttpContextAccessor = (IHttpContextAccessor)serviceProvider.GetService(typeof(IHttpContextAccessor))!;
 
-            CurrentUser = GetCurrentUser();
+            CurrentUser = GetCurrentUser()!;
 
-            HostName = Configuration.GetSection("HostName").Value;
+            HostName = Configuration!.GetSection("HostName").Value!;
         }
 
-        private CurrentUserDto GetCurrentUser()
+        private CurrentUserDto? GetCurrentUser()
         {
             var principal = HttpContextAccessor?.HttpContext?.User;
 
@@ -54,8 +50,8 @@ namespace Application
             var user = new CurrentUserDto
             {
                 Id = Guid.Parse(id.Value),
-                Email = email.Value,
-                UserRole = role.Value
+                Email = email!.Value,
+                UserRole = role!.Value
             };
 
             return user;

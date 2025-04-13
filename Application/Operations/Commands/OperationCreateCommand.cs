@@ -5,30 +5,17 @@ using MediatR;
 
 namespace Application.Operations.Commands
 {
-    public class OperationCreateCommand : IRequest<Guid>
+    public class OperationCreateCommand(OperationDto create) : IRequest<Guid>
     {
-        public OperationCreateCommand(OperationDto create)
-        {
-            Type = create.Type;
-            StartTime = create.StartTime;
-            EndTime = create.EndTime;
-            GuardId = create.GuardId;
-        }
-
-        public string? Type { get; set; }
-        public TimeSpan? StartTime { get; set; }
-        public TimeSpan? EndTime { get; set; }
-        public Guid GuardId { get; set; }
+        public string? Type { get; set; } = create.Type;
+        public TimeSpan? StartTime { get; set; } = create.StartTime;
+        public TimeSpan? EndTime { get; set; } = create.EndTime;
+        public Guid GuardId { get; set; } = create.GuardId;
     }
 
-    public class OperationCreateCommandHandler : IRequestHandler<OperationCreateCommand, Guid>
+    public class OperationCreateCommandHandler(IAppDbContext appDbContext) : IRequestHandler<OperationCreateCommand, Guid>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public OperationCreateCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Guid> Handle(OperationCreateCommand request, CancellationToken cancellationToken)
         {

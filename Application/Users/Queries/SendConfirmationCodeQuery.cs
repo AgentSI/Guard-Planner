@@ -3,26 +3,15 @@ using MediatR;
 
 namespace Application.Users.Queries
 {
-    public class SendConfirmationCodeQuery : IRequest<bool>
+    public class SendConfirmationCodeQuery(string email) : IRequest<bool>
     {
-        public SendConfirmationCodeQuery(string email)
-        {
-            Email = email;
-        }
-
-        public string Email { get; set; }
+        public string Email { get; set; } = email;
     }
 
-    public class SendConfirmationCodeQueryHandler : IRequestHandler<SendConfirmationCodeQuery, bool>
+    public class SendConfirmationCodeQueryHandler(IAppDbContext appDbContext, IEmailService emailService) : IRequestHandler<SendConfirmationCodeQuery, bool>
     {
-        private readonly IAppDbContext _appDbContext;
-        private readonly IEmailService _emailService;
-
-        public SendConfirmationCodeQueryHandler(IAppDbContext appDbContext, IEmailService emailService)
-        {
-            _appDbContext = appDbContext;
-            _emailService = emailService;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
+        private readonly IEmailService _emailService = emailService;
 
         public async Task<bool> Handle(SendConfirmationCodeQuery request, CancellationToken cancellationToken)
         {

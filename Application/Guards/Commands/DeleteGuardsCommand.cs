@@ -1,28 +1,16 @@
 ﻿using Application.Interfaces;
-using Domain.Entities;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Guards.Commands
 {
-    public class DeleteGuardsCommand : IRequest<Unit>
+    public class DeleteGuardsCommand(DateTime? date) : IRequest<Unit>
     {
-        public DeleteGuardsCommand(DateTime? date)
-        {
-            Date = date;
-        }
-
-        public DateTime? Date { get; set; }
+        public DateTime? Date { get; set; } = date;
     }
 
-    public class DeleteGuardsCommandHandler : IRequestHandler<DeleteGuardsCommand, Unit>
+    public class DeleteGuardsCommandHandler(IAppDbContext appDbContext) : IRequestHandler<DeleteGuardsCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public DeleteGuardsCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(DeleteGuardsCommand request, CancellationToken cancellationToken)
         {

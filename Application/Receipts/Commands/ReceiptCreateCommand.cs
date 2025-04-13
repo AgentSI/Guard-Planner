@@ -6,26 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Receipts.Commands
 {
-    public class ReceiptCreateCommand : IRequest<Guid>
+    public class ReceiptCreateCommand(ReceiptDto create) : IRequest<Guid>
     {
-        public ReceiptCreateCommand(ReceiptDto create)
-        {
-            Name = create.Name;
-            OperationId = create.OperationId;
-        }
-
-        public string Name { get; set; }
-        public Guid OperationId { get; set; }
+        public string? Name { get; set; } = create.Name;
+        public Guid OperationId { get; set; } = create.OperationId;
     }
 
-    public class ReceiptCreateCommandHandler : IRequestHandler<ReceiptCreateCommand, Guid>
+    public class ReceiptCreateCommandHandler(IAppDbContext appDbContext) : IRequestHandler<ReceiptCreateCommand, Guid>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public ReceiptCreateCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Guid> Handle(ReceiptCreateCommand request, CancellationToken cancellationToken)
         {
@@ -39,7 +28,7 @@ namespace Application.Receipts.Commands
 
             _appDbContext.Receipts.Add(create);
 
-            operation.ReceiptId = create.Id;
+            operation!.ReceiptId = create.Id;
 
             await _appDbContext.SaveChangesAsync(cancellationToken);
 

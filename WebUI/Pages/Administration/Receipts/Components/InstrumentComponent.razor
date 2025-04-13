@@ -89,8 +89,8 @@
                     ReceiptId = ReceiptId
                 };
 
-            var result = await instrumentService.InstrumentEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await instrumentService.InstrumentEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

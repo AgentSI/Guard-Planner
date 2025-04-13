@@ -5,28 +5,16 @@ using MediatR;
 
 namespace Application.Instruments.Queries
 {
-    public class InstrumentListQuery : IRequest<PaginationResult<InstrumentDto>>
+    public class InstrumentListQuery(PaginationParameter paginationParameter, Guid receiptId) : IRequest<PaginationResult<InstrumentDto>>
     {
-        public InstrumentListQuery(PaginationParameter paginationParameter, Guid receiptId)
-        {
-            ReceiptId = receiptId;
-            PaginationParameter = paginationParameter;
-        }
-
-        public Guid ReceiptId { get; set; }
-        public PaginationParameter PaginationParameter { get; set; }
+        public Guid ReceiptId { get; set; } = receiptId;
+        public PaginationParameter PaginationParameter { get; set; } = paginationParameter;
     }
 
-    public class InstrumentListQueryHandler : IRequestHandler<InstrumentListQuery, PaginationResult<InstrumentDto>>
+    public class InstrumentListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext) : IRequestHandler<InstrumentListQuery, PaginationResult<InstrumentDto>>
     {
-        private readonly IPaginationService _paginationService;
-        private readonly IAppDbContext _appDbContext;
-
-        public InstrumentListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext)
-        {
-            _paginationService = paginationService;
-            _appDbContext = appDbContext;
-        }
+        private readonly IPaginationService _paginationService = paginationService;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<PaginationResult<InstrumentDto>> Handle(InstrumentListQuery request, CancellationToken cancellationToken)
         {

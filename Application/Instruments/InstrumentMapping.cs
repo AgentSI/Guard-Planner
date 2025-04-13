@@ -14,7 +14,7 @@ namespace Application.Instruments
                 {
                     Id = u.Id,
                     Amount = u.Amount,
-                    Name = u.Name,
+                    Name = u.Name!,
                     ReceiptId = u.ReceiptId
                 };
             }

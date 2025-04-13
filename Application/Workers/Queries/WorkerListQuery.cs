@@ -7,25 +7,15 @@ using System.Linq.Expressions;
 
 namespace Application.Workers.Queries
 {
-    public class WorkerListQuery : IRequest<PaginationResult<WorkerDto>>
+    public class WorkerListQuery(PaginationParameter paginationParameter) : IRequest<PaginationResult<WorkerDto>>
     {
-        public WorkerListQuery(PaginationParameter paginationParameter)
-        {
-            PaginationParameter = paginationParameter;
-        }
-        public PaginationParameter PaginationParameter { get; set; }
+        public PaginationParameter PaginationParameter { get; set; } = paginationParameter;
     }
 
-    public class WorkerListQueryHandler : IRequestHandler<WorkerListQuery, PaginationResult<WorkerDto>>
+    public class WorkerListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext) : IRequestHandler<WorkerListQuery, PaginationResult<WorkerDto>>
     {
-        private readonly IPaginationService _paginationService;
-        private readonly IAppDbContext _appDbContext;
-
-        public WorkerListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext)
-        {
-            _paginationService = paginationService;
-            _appDbContext = appDbContext;
-        }
+        private readonly IPaginationService _paginationService = paginationService;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<PaginationResult<WorkerDto>> Handle(WorkerListQuery request, CancellationToken cancellationToken)
         {

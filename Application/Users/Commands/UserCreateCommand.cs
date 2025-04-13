@@ -7,31 +7,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Commands
 {
-    public class UserCreateCommand : IRequest<UserCreateResultDto>
+    public class UserCreateCommand(UserDto createUser) : IRequest<UserCreateResultDto>
     {
-        public UserCreateCommand(UserDto createUser)
-        {
-            Email = createUser.Email;
-            Username = createUser.Username;
-            Password = createUser.Password;
-            UserRole = createUser.Role;
-        }
-
-        public string? Email { get; set; }
-        public string? Username { get; set; }
+        public string? Email { get; set; } = createUser.Email;
+        public string? Username { get; set; } = createUser.Username;
         public string? LastName { get; set; }
-        public string? Password { get; set; }
-        public string? UserRole { get; set; }
+        public string? Password { get; set; } = createUser.Password;
+        public string? UserRole { get; set; } = createUser.Role;
+        public string? Phone { get; set; } = createUser.Phone;
+        public DateTime? Birthday { get; set; } = createUser.Birthday;
     }
 
-    public class UserCreateCommandHandler : IRequestHandler<UserCreateCommand, UserCreateResultDto>
+    public class UserCreateCommandHandler(IAppDbContext appDbContext) : IRequestHandler<UserCreateCommand, UserCreateResultDto>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public UserCreateCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<UserCreateResultDto> Handle(UserCreateCommand request, CancellationToken cancellationToken)
         {
@@ -51,7 +40,9 @@ namespace Application.Users.Commands
                 Email = request.Email,
                 Username = request.Username,
                 UserRole = role,
-                UserRoleId = role.Id,
+                UserRoleId = role!.Id,
+                Phone = request.Phone,
+                Birthday = request.Birthday,
                 SecurityCode = "",
                 CreatedAt = DateTime.UtcNow,
                 PasswordHash = Crypto.HashPassword(AuthorizationVariables.Salt + request.Password)

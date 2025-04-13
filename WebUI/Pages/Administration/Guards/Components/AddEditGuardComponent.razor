@@ -16,7 +16,7 @@
             <DataAnnotationsValidator />
             <MudGrid>
                 <MudItem xs="12">
-                    <MudDatePicker @bind-Date="formDetails.Date" Label="Data" For="@(() => formDetails.Date)" DisableToolbar="true" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="formDetails.Date" Label="Data" For="@(() => formDetails.Date)" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudSelect T="string" MultiSelection="false" @bind-Value="formDetails.WorkerName" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="form-select-sm" Placeholder="Lucrător">
@@ -102,8 +102,8 @@
                     WorkerName = formDetails.WorkerName
                 };
 
-            var result = await guardService.GuardEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await guardService.GuardEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

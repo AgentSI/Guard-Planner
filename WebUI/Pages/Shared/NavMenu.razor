@@ -2,82 +2,129 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using WebUI.Services.UserAccountServices
 @using WebUI.Services.WorkerServices
+@using Microsoft.AspNetCore.Components;
+@using MudBlazor;
+@using WebUI.Services.MenuServices;
+@using System.Diagnostics;
+@using Domain.Entities
 
+@inject IJSRuntime JSRuntime
 @inject IWorkerService workerService
 @inject CurrentUserDto currentUser
 @inject CurrentUserService currentUserService
+@inject IMenuService menuService
 
-<MudNavMenu Bordered="true">
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Acasă</MudNavLink>
-    <MudDivider />
-    @if (currentUser.UserRole == "Administrator")
+<MudNavMenu>
+    @if (pageNames != null && currentUser != null)
     {
-        <MudNavGroup Expanded="true" Title="Administrare Gărzi">
-            <AuthorizeView>
-                <MudNavLink Href="/generate-guards" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AutoMode">Generează Gărzi</MudNavLink>
-                <MudDivider />
+        var homeItem = pageNames.FirstOrDefault(x => x.IsChecked && x.OriginalName == "Acasă");
+        if (homeItem != null)
+        {
+            <MudNavLink Href="@homeItem.Href" Icon="@GetIcon(homeItem.Icon)">@homeItem.DisplayName</MudNavLink>
+        }
 
-                <MudNavLink Href="/guard-calendar" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth">Calendar Gărzi</MudNavLink>
-                <MudDivider />
+        var graficItems = pageNames.Where(x => x.IsChecked &&
+            (x.OriginalName == "Generează Grafic" ||
+            x.OriginalName == "Calendar Grafic" ||
+            x.OriginalName == "Tabel Grafic" ||
+            x.OriginalName == "Tabel Operații")).ToList();
 
-                <MudNavLink Href="/guards" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DarkMode">Tabel Gărzi</MudNavLink>
-                <MudDivider />
+        if (graficItems.Any())
+        {
+            <MudNavGroup Title="Administrare Gărzi" Icon="@Icons.Material.Filled.Settings" Expanded="true">
+                @foreach (var item in graficItems)
+                {
+                    <MudNavLink Href="@item.Href" Icon="@GetIcon(item.Icon)">@item.DisplayName</MudNavLink>
+                }
+            </MudNavGroup>
+        }
 
-                <MudNavLink Href="/operations" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MedicalServices">Tabel Operații</MudNavLink>
-                <MudDivider />
-            </AuthorizeView>
-        </MudNavGroup>
-        <MudNavGroup Expanded="true" Title="Administrare Lucrători">
-            <AuthorizeView>
-                <MudNavLink Href="/vacations" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.WbSunny">Tabel Concedii</MudNavLink>
-                <MudDivider />
+        var lucratoriItems = pageNames.Where(x => x.IsChecked &&
+            (x.OriginalName == "Tabel Concedii" ||
+            x.OriginalName == "Ore de lucru" ||
+            x.OriginalName == "Tabel de pontaj" ||
+            x.OriginalName == "Tabel Lucrători" ||
+            x.OriginalName == "Procent gardă")).ToList();
 
-                <MudNavLink Href="/workers-hours" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccessAlarm">Tabel ore de lucru</MudNavLink>
-                <MudDivider />
+        if (lucratoriItems.Any())
+        {
+            <MudNavGroup Title="Administrare Lucrători" Icon="@Icons.Material.Filled.Settings" Expanded="true">
+                @foreach (var item in lucratoriItems)
+                {
+                    <MudNavLink Href="@item.Href" Icon="@GetIcon(item.Icon)">@item.DisplayName</MudNavLink>
+                }
+            </MudNavGroup>
+        }
 
-                <MudNavLink Href="/workers" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Work">Tabel Lucrători</MudNavLink>
-                <MudDivider />
+        var standaloneItems = pageNames.Where(x => x.IsChecked &&
+            x.OriginalName != "Administrare Gărzi" &&
+            x.OriginalName != "Administrare Lucrători" &&
+            x.OriginalName != "Generează Grafic" &&
+            x.OriginalName != "Calendar Grafic" &&
+            x.OriginalName != "Tabel Grafic" &&
+            x.OriginalName != "Tabel Operații" &&
+            x.OriginalName != "Tabel Concedii" &&
+            x.OriginalName != "Ore de lucru" &&
+            x.OriginalName != "Tabel de pontaj" &&
+            x.OriginalName != "Tabel Lucrători" &&
+            x.OriginalName != "Procent gardă" &&
+            x.OriginalName != "Acasă" &&
+            x.OriginalName != "Profilul meu");
 
-                <MudNavLink Href="/percents" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Percent">Procent gardă</MudNavLink>
-                <MudDivider />
-            </AuthorizeView>
-        </MudNavGroup>
+        @foreach (var item in standaloneItems)
+        {
+            <MudNavLink Href="@item.Href" Icon="@GetIcon(item.Icon)">@item.DisplayName</MudNavLink>
+        }
 
-        <MudNavLink Href="/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PersonAdd">Tabel Utilizatori</MudNavLink>
-        <MudDivider />
-    }
-    <MudNavLink Href="/my-profile" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Person">Profilul meu</MudNavLink>
-    <MudDivider />
-    @if (currentUser.UserRole == "Lucrător")
-    {
-        var vacationsUrl = $"/vacations/{worker.Id}";
-        var guardsUrl = $"/guards/{worker.Id}";
-
-        <MudNavLink Href="@vacationsUrl" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.WbSunny">Concediile mele</MudNavLink>
-        <MudDivider />
-
-        <MudNavLink Href="@guardsUrl" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DarkMode">Gărzile mele</MudNavLink>
-        <MudDivider />
+        var profileItem = pageNames.FirstOrDefault(x => x.IsChecked && x.OriginalName == "Profilul meu");
+        if (profileItem != null)
+        {
+            <MudNavLink Href="@profileItem.Href" Icon="@GetIcon(profileItem.Icon)">@profileItem.DisplayName</MudNavLink>
+        }
     }
 </MudNavMenu>
 <p class="mud-typography mud-typography-body2 mud-typography-align-justify d-flex align-content-end flex-wrap flex-grow-1 gap-4 ml-5">©2024 Ivanova Evghenia</p>
 
 @code {
     private WorkerDto worker = new WorkerDto();
-
     private bool collapseNavMenu = true;
-
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private List<MenuDto> pageNames = new List<MenuDto>();
 
     protected override async Task OnInitializedAsync()
     {
         await currentUserService.InitializeAsync();
         var currentUser = await currentUserService.GetAsync();
         if (currentUser.UserRole == "Lucrător") worker = await workerService.GetWorkerByEmail(currentUser.Email);
+
+        pageNames = await menuService.GetMenu();
     }
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private string GetIcon(string icon)
+    {
+        return icon?.ToLower() switch
+        {
+            "home" => Icons.Material.Filled.Home,
+            "settings" => Icons.Material.Filled.Settings,
+            "person" => Icons.Material.Filled.Person,
+            "personadd" => Icons.Material.Filled.PersonAdd,
+            "permidentity" => Icons.Material.Filled.PermIdentity,
+            "edit" => Icons.Material.Filled.Edit,
+            "automode" => Icons.Material.Filled.AutoMode,
+            "calendarmonth" => Icons.Material.Filled.CalendarMonth,
+            "darkmode" => Icons.Material.Filled.DarkMode,
+            "medicalservices" => Icons.Material.Filled.MedicalServices,
+            "wbsunny" => Icons.Material.Filled.WbSunny,
+            "hourglassfull" => Icons.Material.Filled.HourglassFull,
+            "accessalarm" => Icons.Material.Filled.AccessAlarm,
+            "work" => Icons.Material.Filled.Work,
+            "percent" => Icons.Material.Filled.Percent,
+            _ => Icons.Material.Filled.Home
+        };
     }
 }

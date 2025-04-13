@@ -5,32 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Operations.Commands
 {
-    public class OperationEditCommand : IRequest<Unit>
+    public class OperationEditCommand(OperationDto model) : IRequest<Unit>
     {
-        public OperationEditCommand(OperationDto model)
-        {
-            Id = model.Id;
-            Type = model.Type;
-            StartTime = model.StartTime;
-            EndTime = model.EndTime;
-            GuardId = model.GuardId;
-        }
-
-        public Guid Id { get; set; }
-        public string? Type { get; set; }
-        public TimeSpan? StartTime { get; set; }
-        public TimeSpan? EndTime { get; set; }
-        public Guid GuardId { get; set; }
+        public Guid Id { get; set; } = model.Id;
+        public string? Type { get; set; } = model.Type;
+        public TimeSpan? StartTime { get; set; } = model.StartTime;
+        public TimeSpan? EndTime { get; set; } = model.EndTime;
+        public Guid GuardId { get; set; } = model.GuardId;
     }
 
-    public class OperationEditCommandHandler : IRequestHandler<OperationEditCommand, Unit>
+    public class OperationEditCommandHandler(IAppDbContext appDbContext) : IRequestHandler<OperationEditCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public OperationEditCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(OperationEditCommand request, CancellationToken cancellationToken)
         {

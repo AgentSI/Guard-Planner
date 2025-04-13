@@ -5,28 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Workers.Commands
 {
-    public class WorkerEditCommand : IRequest<Unit>
+    public class WorkerEditCommand(WorkerDto model) : IRequest<Unit>
     {
-        public WorkerEditCommand(WorkerDto model)
-        {
-            Id = model.Id;
-            Name = model.Name;
-            FirstName = model.FirstName;
-            Specialization = model.Specialization;
-            Email = model.Email;
-            Available = model.Available;
-            IsGuard = model.IsGuard;
-            Percent = model.Percent;
-        }
-
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string? FirstName { get; set; }
-        public string? Specialization { get; set; }
-        public string? Email { get; set; }
-        public bool Available { get; set; }
-        public bool IsGuard { get; set; }
-        public double Percent { get; set; }
+        public Guid Id { get; set; } = model.Id;
+        public string? Name { get; set; } = model.Name;
+        public string? FirstName { get; set; } = model.FirstName;
+        public string? Specialization { get; set; } = model.Specialization;
+        public string? Email { get; set; } = model.Email;
+        public bool Available { get; set; } = model.Available;
+        public bool IsWorkDay { get; set; } = model.IsWorkDay;
+        public bool IsGuard { get; set; } = model.IsGuard;
+        public double Percent { get; set; } = model.Percent;
+        public int NoDaysVacation { get; set; } = model.NoDaysVacation;
     }
 
     public class WorkerEditCommandHandler : IRequestHandler<WorkerEditCommand, Unit>
@@ -51,8 +41,10 @@ namespace Application.Workers.Commands
                 toEdit.Specialization = request.Specialization;
                 toEdit.Email = request.Email;
                 toEdit.Available = request.Available;
+                toEdit.IsWorkDay = request.IsWorkDay;
                 toEdit.IsGuard = request.IsGuard;
                 toEdit.Percent = request.Percent;
+                toEdit.NoDaysVacation = request.NoDaysVacation;
             }
 
             await _appDbContext.SaveChangesAsync(cancellationToken);

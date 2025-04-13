@@ -69,7 +69,7 @@
                 <MudTd>@context.StartTime</MudTd>
                 <MudTd>@context.EndTime</MudTd>
                 <MudTd>
-                    <MudLink OnClick="@(async () => await NavigateToReceipt(context.Id, context.ReceiptId))">
+                    <MudLink OnClick="@(async () => NavigateToReceipt(context.Id, context.ReceiptId))">
                         Vezi Bon
                     </MudLink>
                 </MudTd>
@@ -134,7 +134,7 @@
                 SortDescending = sortDirection
             };
 
-        PaginationResult<OperationDto>? result;
+        PaginationResult<OperationDto> result;
         if (GuardId.HasValue) result = await operationService.GetOperations(parameters, GuardId.Value);
         else result = await operationService.GetOperations(parameters);
 
@@ -151,7 +151,7 @@
         }
     }
 
-    private void SortColumn(string columnName)
+    private async void SortColumn(string columnName)
     {
         if (sortColumn == columnName)
         {
@@ -163,7 +163,7 @@
             sortDirection = true;
         }
 
-        LoadData();
+        await LoadData();
     }
 
     private string GetSortIcon(string columnName)
@@ -199,7 +199,7 @@
         navigationManager.NavigateTo("/guards");
     }
 
-    private async Task NavigateToReceipt(Guid operationId, Guid? receiptId)
+    private void NavigateToReceipt(Guid operationId, Guid? receiptId)
     {
         if (receiptId != Guid.Empty)
         {

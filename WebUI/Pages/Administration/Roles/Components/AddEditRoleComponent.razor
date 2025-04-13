@@ -1,0 +1,91 @@
+﻿@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Services.RoleServices
+
+@inject IRoleService roleService
+@inject CurrentUserDto currentUser
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Style="height:100px; width:100px; position:fixed; top:40%; left:50%;" Indeterminate="true" />
+}
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="roleFormDetails" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="roleFormDetails.RoleName" For="@(() => roleFormDetails.RoleName)" Label="Nume rol" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                        <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    PaginationParameter paginationParameters = new PaginationParameter();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid? RoleId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    UserRoleDto roleFormDetails = new UserRoleDto();
+
+    private bool isLoading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (RoleId.HasValue)
+        {
+            roleFormDetails = await roleService.GetRoleById(RoleId.Value);
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        bool isSuccessfull = false;
+
+        if (!RoleId.HasValue)
+        {
+            var create = new UserRoleDto
+                {
+                    RoleName = roleFormDetails.RoleName
+                };
+
+            var roleResponse = await roleService.RoleCreate(create);
+            isSuccessfull = true;
+        }
+        else
+        {
+            var roleToEdit = new UserRoleDto
+                {
+                    Id = roleFormDetails.Id,
+                    RoleName = roleFormDetails.RoleName
+                };
+
+            await roleService.RoleEdit(roleToEdit);
+            isSuccessfull = true;
+        }
+
+        if (isSuccessfull) Callback?.Invoke();
+
+        MudDialog.Close();
+    }
+}

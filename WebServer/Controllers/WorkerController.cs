@@ -2,7 +2,6 @@
 using Application.Interfaces.Pagination;
 using Application.Workers.Commands;
 using Application.Workers.Queries;
-using Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +10,9 @@ namespace WebServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class WorkerController : Controller
+    public class WorkerController(IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-        private readonly AppDbContext _context;
-
-        public WorkerController(IMediator mediator, AppDbContext context)
-        {
-            _mediator = mediator;
-            _context = context;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [Authorize]
         [HttpPost("all")]
@@ -68,6 +60,13 @@ namespace WebServer.Controllers
         public async Task<Unit> WorkerEdit([FromBody] WorkerDto request)
         {
             return await _mediator.Send(new WorkerEditCommand(request));
+        }
+
+        [Authorize]
+        [HttpPut("hourEdit")]
+        public async Task<Unit> WorkerHourEdit([FromBody] WorkerHoursDto request, [FromQuery] int day, [FromQuery] int hours)
+        {
+            return await _mediator.Send(new WorkerHourEditCommand(request, day, hours));
         }
 
         [Authorize]

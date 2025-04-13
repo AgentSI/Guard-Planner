@@ -8,9 +8,9 @@
 
 <style>
     .chart-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     }
 </style>
 
@@ -25,11 +25,11 @@
         @if (vacations.Any())
         {
             <MudChart ChartType="ChartType.Bar"
-                      ChartSeries="@Series"
-                      XAxisLabels="@XAxisLabels"
-                      LegendPosition="@(Position.Top)"
-                      Width="100%"
-                      Height="350px"/>
+            ChartSeries="@Series"
+            XAxisLabels="@XAxisLabels"
+            LegendPosition="@(Position.Top)"
+            Width="100%"
+            Height="350px"/>
         }
         else
         {
@@ -69,6 +69,9 @@
                     });
             }
         }
-        catch (Exception ex) { }
+        catch (Exception ex) 
+        {
+            Console.WriteLine(ex.Message);
+        }
     }
 }

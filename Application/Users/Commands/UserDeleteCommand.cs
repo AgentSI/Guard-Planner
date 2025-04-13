@@ -9,20 +9,15 @@ namespace Application.Users.Commands
         public Guid Id { get; set; }
     }
 
-    public class UserDeleteCommandHandler : IRequestHandler<UserDeleteCommand, Unit>
+    public class UserDeleteCommandHandler(IAppDbContext appDbContext) : IRequestHandler<UserDeleteCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public UserDeleteCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(UserDeleteCommand request, CancellationToken cancellationToken)
         {
             var userToDelete = await _appDbContext.Users.Where(e => e.Id == request.Id).FirstOrDefaultAsync();
 
-            _appDbContext.Users.Remove(userToDelete);
+            _appDbContext.Users.Remove(userToDelete!);
             await _appDbContext.SaveChangesAsync(cancellationToken);
 
             return Unit.Value;

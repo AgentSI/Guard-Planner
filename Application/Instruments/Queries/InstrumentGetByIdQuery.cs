@@ -4,30 +4,20 @@ using MediatR;
 
 namespace Application.Instruments.Queries
 {
-    public class InstrumentGetByIdQuery : IRequest<InstrumentDto>
+    public class InstrumentGetByIdQuery(Guid id) : IRequest<InstrumentDto>
     {
-        public InstrumentGetByIdQuery(Guid id)
-        { 
-            Id = id;
-        }
-
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
     }
 
-    public class InstrumentGetByIdQueryHandler : IRequestHandler<InstrumentGetByIdQuery, InstrumentDto>
+    public class InstrumentGetByIdQueryHandler(IAppDbContext appDbContext) : IRequestHandler<InstrumentGetByIdQuery, InstrumentDto>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public InstrumentGetByIdQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<InstrumentDto> Handle(InstrumentGetByIdQuery request, CancellationToken cancellationToken)
+        public Task<InstrumentDto> Handle(InstrumentGetByIdQuery request, CancellationToken cancellationToken)
         {
             var instrument = _appDbContext.Instrument.Where(p => p.Id == request.Id).Select(InstrumentMapping.InstrumentProjection).FirstOrDefault();
-            if (instrument != null) return instrument;
-            else return null;
+            if (instrument != null) return Task.FromResult(instrument);
+            else return Task.FromResult(new InstrumentDto { });
         }
     }
 }

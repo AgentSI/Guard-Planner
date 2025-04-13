@@ -54,7 +54,7 @@
             <RowTemplate Context="context">
                 <MudTd>@context.Name</MudTd>
                 <MudTd>
-                    <MudLink OnClick="@(async () => await NavigateToVacations(context.Id))">
+                    <MudLink OnClick="@(async () => NavigateToVacations(context.Id))">
                         Concedii
                     </MudLink>
                 </MudTd>
@@ -63,7 +63,7 @@
                 <MudTd>
                     @if (@context.Percent != 0)
                     {
-                        <MudLink OnClick="@(async () => await NavigateToGuards(context.Id))">
+                        <MudLink OnClick="@(async () => NavigateToGuards(context.Id))">
                             Gărzi
                         </MudLink>
                     }
@@ -142,7 +142,7 @@
         }
     }
 
-    private void SortColumn(string columnName)
+    private async void SortColumn(string columnName)
     {
         if (sortColumn == columnName)
         {
@@ -154,7 +154,7 @@
             sortDirection = true;
         }
 
-        LoadData();
+        await LoadData();
     }
 
     private string GetSortIcon(string columnName)
@@ -173,7 +173,6 @@
 
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 
@@ -184,7 +183,7 @@
         else dialog = dialogsService.Show<AddEditWorkerComponent>("Detalii lucrător", parameters, options);
     }
 
-    private async Task NavigateToGuards(Guid? workerId)
+    private void NavigateToGuards(Guid? workerId)
     {
         if (workerId != null)
         {
@@ -192,7 +191,7 @@
         }
     }
 
-    private async Task NavigateToVacations(Guid? workerId)
+    private void NavigateToVacations(Guid? workerId)
     {
         if (workerId != null)
         {

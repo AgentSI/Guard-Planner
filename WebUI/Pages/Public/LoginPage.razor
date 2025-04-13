@@ -136,8 +136,13 @@
 @code {
     private LoginDto user = new LoginDto();
 
-    private bool isLoggingIn = false;
     private string errorMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        user.Email = "admin@mail.com";
+        user.Password = "Parola11a#";
+    }
 
     private async Task HandleLogin()
     {
@@ -147,7 +152,6 @@
             return;
         }
 
-        isLoggingIn = true;
         var result = await userService.Login(user);
 
         if (result.Success)
@@ -162,7 +166,5 @@
             errorMessage = result.ResponseMessage;
             snackbar.Add(errorMessage, Severity.Error);
         }
-
-        isLoggingIn = false;
     }
 }

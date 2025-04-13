@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.InventoryServices
 {
-    public class InventoryService : IInventoryService
+    public class InventoryService(HttpClient httpClient, ISnackbar snackbar) : IInventoryService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public InventoryService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<InventoryDto>> GetInventories(PaginationParameter paginationParameter, Guid guardId)
         {

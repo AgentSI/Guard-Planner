@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.WorkerServices
 {
-    public class WorkerService : IWorkerService
+    public class WorkerService(HttpClient httpClient, ISnackbar snackbar) : IWorkerService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public WorkerService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<WorkerDto>> GetWorkers(PaginationParameter paginationParameter)
         {
@@ -131,6 +125,18 @@ namespace WebUI.Services.WorkerServices
         {
             var result = await _httpClient.GetAsync($"api/Worker/percentList");
             return await result.Content.ReadFromJsonAsync<List<PercentDto>>();
+        }
+
+        public async Task<Unit> WorkerHourEdit(WorkerHoursDto workerHours, int day, int hours)
+        {
+            var result = await _httpClient.PutAsJsonAsync($"api/Worker/hourEdit?day={day}&hours={hours}", workerHours);
+            if (result.IsSuccessStatusCode)
+            {
+                _snackbar.Add("Orele au fost actualizate cu succes.", Severity.Success);
+                return await result.Content.ReadFromJsonAsync<Unit>();
+            }
+            _snackbar.Add("A apărut o eroare la actualizarea orelor.", Severity.Error);
+            return default;
         }
     }
 }

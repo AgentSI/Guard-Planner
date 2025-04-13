@@ -218,8 +218,8 @@
                     OperationId = OperationId
                 };
 
-            var result = await receiptService.ReceiptEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await receiptService.ReceiptEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) navigationManager.NavigateTo($"/bon/{OperationId}/{formDetails.Id}");
@@ -233,7 +233,6 @@
 
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 
@@ -253,7 +252,6 @@
 
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 

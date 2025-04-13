@@ -9,20 +9,15 @@ namespace Application.Inventories.Commands
         public Guid Id { get; set; }
     }
 
-    public class InventoryDeleteCommandHandler : IRequestHandler<InventoryDeleteCommand, Unit>
+    public class InventoryDeleteCommandHandler(IAppDbContext appDbContext) : IRequestHandler<InventoryDeleteCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public InventoryDeleteCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(InventoryDeleteCommand request, CancellationToken cancellationToken)
         {
             var toDelete = await _appDbContext.Inventories.Where(e => e.Id == request.Id).FirstOrDefaultAsync();
 
-            _appDbContext.Inventories.Remove(toDelete);
+            _appDbContext.Inventories.Remove(toDelete!);
             await _appDbContext.SaveChangesAsync(cancellationToken);
 
             return Unit.Value;

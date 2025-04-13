@@ -4,12 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure
 {
-    public class AppDbContext : DbContext, IAppDbContext
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-        }
-
+        public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Guard> Guards { get; set; }
@@ -18,7 +15,10 @@ namespace Infrastructure
         public DbSet<Receipt> Receipts { get; set; }
         public DbSet<Vacation> Vacations { get; set; }
         public DbSet<Worker> Workers { get; set; }
+        public DbSet<WorkerHours> WorkerHours { get; set; }
+        public DbSet<DailyWorkHours> DailyWorkHours { get; set; }
         public DbSet<Percent> Percents { get; set; }
+        public DbSet<Hour> Hours { get; set; }
         public DbSet<Instrument> Instrument { get; set; }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.OperationServices
 {
-    public class OperationService : IOperationService
+    public class OperationService(HttpClient httpClient, ISnackbar snackbar) : IOperationService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public OperationService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<OperationDto>> GetOperations(PaginationParameter paginationParameter)
         {

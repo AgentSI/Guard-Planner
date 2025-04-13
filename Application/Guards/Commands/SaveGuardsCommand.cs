@@ -5,31 +5,21 @@ using MediatR;
 
 namespace Application.Guards.Commands
 {
-    public class SaveGuardsCommand : IRequest<Unit>
+    public class SaveGuardsCommand(List<GuardDto> guards) : IRequest<Unit>
     {
-        public SaveGuardsCommand(List<GuardDto> guards)
-        {
-            Guards = guards;
-        }
-
-        public List<GuardDto> Guards { get; set; }
+        public List<GuardDto> Guards { get; set; } = guards;
     }
 
-    public class SaveGuardsCommandHandler : IRequestHandler<SaveGuardsCommand, Unit>
+    public class SaveGuardsCommandHandler(IAppDbContext appDbContext) : IRequestHandler<SaveGuardsCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public SaveGuardsCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(SaveGuardsCommand request, CancellationToken cancellationToken)
         {
             var guards = request.Guards.Select(dto => new Guard
             {
                 WorkerId = dto.WorkerId,
-                Date = dto.Date.Value,
+                Date = dto.Date!.Value,
                 Hours = dto.Hours,
             }).ToList();
 

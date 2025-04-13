@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.VacationServices
 {
-    public class VacationService : IVacationService
+    public class VacationService(HttpClient httpClient, ISnackbar snackbar) : IVacationService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public VacationService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<VacationDto>> GetVacations(PaginationParameter paginationParameter)
         {

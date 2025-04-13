@@ -80,7 +80,6 @@
 
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 
@@ -88,6 +87,6 @@
         parameters.Add("callback", callback);
 
         if (delete) dialog = dialogsService.Show<DeleteComponent>("Sunteți sigur că doriți să ștergeți acest procent gardă ?", parameters, options);
-        else dialog = dialogsService.Show<AddEditPercentComponent>("Detalii procent gardă", parameters, options);
+        else dialog = dialogsService.Show<AddPercentComponent>("Detalii procent gardă", parameters, options);
     }
 }

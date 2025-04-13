@@ -2,7 +2,7 @@
 
 @inject IWorkerService workerService
 
-<MudDialog Width="300px">
+<MudDialog>
     <DialogActions>
         <MudButton Variant="Variant.Filled" OnClick="@(() => WorkerDelete(@WorkerId))" ButtonType="ButtonType.Submit" Color="Color.Error">Da</MudButton>
         <MudButton Variant="Variant.Filled" OnClick="Cancel">Anulează</MudButton>

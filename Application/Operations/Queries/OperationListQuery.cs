@@ -7,28 +7,16 @@ using System.Linq.Expressions;
 
 namespace Application.Operations.Queries
 {
-    public class OperationListQuery : IRequest<PaginationResult<OperationDto>>
+    public class OperationListQuery(PaginationParameter paginationParameter, Guid? guardId) : IRequest<PaginationResult<OperationDto>>
     {
-        public OperationListQuery(PaginationParameter paginationParameter, Guid? guardId)
-        {
-            GuardId = guardId;
-            PaginationParameter = paginationParameter;
-        }
-
-        public Guid? GuardId { get; set; }
-        public PaginationParameter PaginationParameter { get; set; }
+        public Guid? GuardId { get; set; } = guardId;
+        public PaginationParameter PaginationParameter { get; set; } = paginationParameter;
     }
 
-    public class OperationListQueryHandler : IRequestHandler<OperationListQuery, PaginationResult<OperationDto>>
+    public class OperationListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext) : IRequestHandler<OperationListQuery, PaginationResult<OperationDto>>
     {
-        private readonly IPaginationService _paginationService;
-        private readonly IAppDbContext _appDbContext;
-
-        public OperationListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext)
-        {
-            _paginationService = paginationService;
-            _appDbContext = appDbContext;
-        }
+        private readonly IPaginationService _paginationService = paginationService;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<PaginationResult<OperationDto>> Handle(OperationListQuery request, CancellationToken cancellationToken)
         {
@@ -50,8 +38,8 @@ namespace Application.Operations.Queries
                 }
                 else if (query.SortBy == nameof(OperationDto.Date))
                 {
-                    if (query.SortDescending.HasValue && query.SortDescending.Value) operationsQuery = operationsQuery.OrderByDescending(u => u.Guard.Date);
-                    else operationsQuery = operationsQuery.OrderBy(u => u.Guard.Date);
+                    if (query.SortDescending.HasValue && query.SortDescending.Value) operationsQuery = operationsQuery.OrderByDescending(u => u.Guard!.Date);
+                    else operationsQuery = operationsQuery.OrderBy(u => u.Guard!.Date);
                 }
                 else
                 {

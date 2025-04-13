@@ -18,7 +18,7 @@ namespace Application.Operations
                     EndTime = u.EndTime,
                     ReceiptId = u.ReceiptId,
                     GuardId = u.GuardId,
-                    Date = u.Guard.Date
+                    Date = u.Guard!.Date
                 };
             }
         }

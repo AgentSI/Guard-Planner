@@ -4,30 +4,20 @@ using MediatR;
 
 namespace Application.Inventories.Queries
 {
-    public class InventoryGetByIdQuery : IRequest<InventoryDto>
+    public class InventoryGetByIdQuery(Guid id) : IRequest<InventoryDto>
     {
-        public InventoryGetByIdQuery(Guid id)
-        { 
-            Id = id;
-        }
-
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
     }
 
-    public class InventoryGetByIdQueryHandler : IRequestHandler<InventoryGetByIdQuery, InventoryDto>
+    public class InventoryGetByIdQueryHandler(IAppDbContext appDbContext) : IRequestHandler<InventoryGetByIdQuery, InventoryDto>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public InventoryGetByIdQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<InventoryDto> Handle(InventoryGetByIdQuery request, CancellationToken cancellationToken)
+        public Task<InventoryDto> Handle(InventoryGetByIdQuery request, CancellationToken cancellationToken)
         {
             var inventory = _appDbContext.Inventories.Where(p => p.Id == request.Id).Select(InventoryMapping.InventoryProjection).FirstOrDefault();
-            if (inventory != null) return inventory;
-            else return null;
+            if (inventory != null) return Task.FromResult(inventory);
+            else return Task.FromResult(new InventoryDto { });
         }
     }
 }

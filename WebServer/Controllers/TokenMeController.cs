@@ -23,14 +23,14 @@ namespace WebServer.Controllers
 
         [Authorize]
         [HttpGet("tokenme")]
-        public async Task<ClaimsDto> Me()
+        public async Task<ClaimsDto?> Me()
         {
             var jwt = "";
 
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_configuration.GetSection("AppSettings:Token").Value)),
+                IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_configuration.GetSection("AppSettings:Token").Value!)),
                 ValidateIssuer = false,
                 ValidateAudience = false,
                 RequireExpirationTime = true,
@@ -48,7 +48,7 @@ namespace WebServer.Controllers
                 tokenHandler.ValidateToken(jwt, validationParameters, out validatedToken);
                 var jwtToken = validatedToken as JwtSecurityToken;
                 var userIdClaim = jwtToken?.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
-                var user = await _mediator.Send(new UserGetByIdQuery(Guid.Parse(userIdClaim)));
+                var user = await _mediator.Send(new UserGetByIdQuery(Guid.Parse(userIdClaim!)));
                 if (user == null)
                 {
                     Response.Cookies.Delete("token");
@@ -56,7 +56,7 @@ namespace WebServer.Controllers
                 }
                 else
                 {
-                    var claims = new ClaimsDto((validatedToken as JwtSecurityToken).Claims);
+                    var claims = new ClaimsDto(((JwtSecurityToken)validatedToken).Claims);
                     return claims;
                 }
 

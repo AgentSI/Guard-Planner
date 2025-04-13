@@ -13,7 +13,7 @@
 
 <AuthorizeView>
     <MudPaper Class="profile-card" Elevation="4" Style="padding: 24px; max-width: 1000px; margin: auto; margin-top: 32px;">
-        <MudText Typo="Typo.h5" GutterBottom="true" Style="text-align:center;">Profilul Meu</MudText>
+        <MudText Typo="Typo.h6" GutterBottom="true" Style="text-align:center;">Profilul Meu</MudText>
 
         <MudGrid>
             <MudItem xs="12" sm="6" Style="text-align:center;">
@@ -26,6 +26,8 @@
                     <div class="profile-menu">
                         <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Nume: <b>@user.Username</b></MudText>
                         <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Rol: <b>@user.Role</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Data nașterii: <b>@user.Birthday?.ToString("dd.MM.yyyy")</b></MudText>
+                        <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Telefon de contact: <b>@user.Phone</b></MudText>
                         <MudText Typo="Typo.body1" Style="display:block; margin-top: 10px;">Email: <b>@user.Email</b></MudText>
                     </div>
                 </MudItem>
@@ -66,20 +68,14 @@
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="user.Email" For="@(() => user.Email)" Label="Email" Variant="Variant.Outlined" />
                     </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker @bind-Date="user.Birthday" For="@(() => user.Birthday)" Label="Data nașterii" DateFormat="dd.MM.yyyy" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="user.Phone" For="@(() => user.Phone)" Label="Telefon de contact" Variant="Variant.Outlined" />
+                    </MudItem>
                     <MudItem xs="12">
-                        @if (currentUser.UserRole == "Administrator")
-                        {
-                            <MudSelect T="string" MultiSelection="false" @bind-Value="user.Role" Label="Rol" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Placeholder="Rol">
-                                @foreach (var role in roles)
-                                {
-                                    <MudSelectItem Value="@role">@role</MudSelectItem>
-                                }
-                            </MudSelect>
-                        }
-                        else
-                        {
-                            <MudTextField @bind-Value="user.Role" For="@(() => user.Role)" Label="Rol" ReadOnly Variant="Variant.Outlined" />
-                        }
+                        <MudTextField @bind-Value="user.Role" For="@(() => user.Role)" Label="Rol" ReadOnly Variant="Variant.Outlined" />
                     </MudItem>
                     <MudGrid Justify="Justify.FlexEnd">
                         <MudItem>
@@ -97,7 +93,6 @@
     public bool isLoadingType = true;
     private UserDto user = new UserDto();
     private WorkerDto worker = new WorkerDto();
-    private List<string> roles = new List<string>();
 
     private string userInitials => !string.IsNullOrEmpty(user.Username)
         ? string.Concat(user.Username.Split(' ').Select(s => s[0]))
@@ -110,7 +105,6 @@
         user = await accountService.GetUserById(currentUser.Id);
         if (currentUser.UserRole == "Lucrător") worker = await workerService.GetWorkerByEmail(currentUser.Email);
         isLoadingType = false;
-        roles = await accountService.GetRoles();
         StateHasChanged();
     }
 
@@ -121,7 +115,9 @@
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
-                Role = user.Role
+                Role = user.Role,
+                Phone = user.Phone,
+                Birthday = user.Birthday
             };
 
         var result = await accountService.UserEdit(userToEdit);

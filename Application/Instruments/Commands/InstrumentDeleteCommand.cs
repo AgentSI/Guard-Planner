@@ -9,20 +9,15 @@ namespace Application.Instruments.Commands
         public Guid Id { get; set; }
     }
 
-    public class InstrumentDeleteCommandHandler : IRequestHandler<InstrumentDeleteCommand, Unit>
+    public class InstrumentDeleteCommandHandler(IAppDbContext appDbContext) : IRequestHandler<InstrumentDeleteCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public InstrumentDeleteCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(InstrumentDeleteCommand request, CancellationToken cancellationToken)
         {
             var toDelete = await _appDbContext.Instrument.Where(e => e.Id == request.Id).FirstOrDefaultAsync();
 
-            _appDbContext.Instrument.Remove(toDelete);
+            _appDbContext.Instrument.Remove(toDelete!);
             await _appDbContext.SaveChangesAsync(cancellationToken);
 
             return Unit.Value;

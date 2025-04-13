@@ -3,34 +3,20 @@ using Application.Interfaces;
 using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace Application.Vacations.Commands
 {
-    public class VacationCreateCommand : IRequest<VacationCreateResultDto>
+    public class VacationCreateCommand(VacationDto create) : IRequest<VacationCreateResultDto>
     {
-        public VacationCreateCommand(VacationDto create)
-        {
-            WorkerName = create.WorkerName;
-            StartDate = create.StartDate;
-            EndDate = create.EndDate;
-            Reason = create.Reason;
-        }
-
-        public string WorkerName { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public string? Reason { get; set; }
+        public string? WorkerName { get; set; } = create.WorkerName;
+        public DateTime? StartDate { get; set; } = create.StartDate;
+        public DateTime? EndDate { get; set; } = create.EndDate;
+        public string? Reason { get; set; } = create.Reason;
     }
 
-    public class VacationCreateCommandHandler : IRequestHandler<VacationCreateCommand, VacationCreateResultDto>
+    public class VacationCreateCommandHandler(IAppDbContext appDbContext) : IRequestHandler<VacationCreateCommand, VacationCreateResultDto>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public VacationCreateCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<VacationCreateResultDto> Handle(VacationCreateCommand request, CancellationToken cancellationToken)
         {
@@ -63,7 +49,7 @@ namespace Application.Vacations.Commands
             if (worker.NoDaysVacation == 0)
                 return new VacationCreateResultDto { Success = false, ErrorMessage = "Nu sunt disponibile zile de concediu" };
 
-            var requestedDays = (request.EndDate.Value - request.StartDate.Value).Days + 1;
+            var requestedDays = (request.EndDate!.Value - request.StartDate!.Value).Days + 1;
             if (worker.NoDaysVacation < requestedDays)
                 return new VacationCreateResultDto { Success = false, ErrorMessage = $"Zile de concediu disponibile: {worker.NoDaysVacation}" };
 

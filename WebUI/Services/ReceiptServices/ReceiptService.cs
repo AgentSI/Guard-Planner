@@ -5,16 +5,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.ReceiptServices
 {
-    public class ReceiptService : IReceiptService
+    public class ReceiptService(HttpClient httpClient, ISnackbar snackbar) : IReceiptService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public ReceiptService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<Guid> ReceiptCreate(ReceiptDto request)
         {

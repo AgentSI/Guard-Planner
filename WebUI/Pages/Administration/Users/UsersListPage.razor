@@ -120,7 +120,7 @@
         }
     }
 
-    private void SortColumn(string columnName)
+    private async void SortColumn(string columnName)
     {
         if (sortColumn == columnName)
         {
@@ -132,7 +132,7 @@
             sortDirection = true;
         }
 
-        LoadData();
+        await LoadData();
     }
 
     private string GetSortIcon(string columnName)
@@ -151,7 +151,6 @@
 
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 

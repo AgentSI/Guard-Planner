@@ -7,7 +7,7 @@ namespace Application.DTOs
         public Guid Id { get; set; }
         public Guid WorkerId { get; set; }
         [Required(ErrorMessage = "Lucrător-ul este obligatoriu")]
-        public string WorkerName { get; set; }
+        public string? WorkerName { get; set; }
         [Required(ErrorMessage = "Data este obligatorie")]
         public DateTime? StartDate { get; set; }
         [Required(ErrorMessage = "Data este obligatorie")]

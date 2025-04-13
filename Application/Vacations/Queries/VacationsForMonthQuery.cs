@@ -5,26 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Vacations.Queries
 {
-    public class VacationsForMonthQuery : IRequest<List<VacationDto>>
+    public class VacationsForMonthQuery(int month, int year) : IRequest<List<VacationDto>>
     {
-        public VacationsForMonthQuery(int month, int year)
-        {
-            Month = month;
-            Year = year;
-        }
-
-        public int Month { get; set; }
-        public int Year { get; set; }
+        public int Month { get; set; } = month;
+        public int Year { get; set; } = year;
     }
 
-    public class VacationsForMonthQueryHandler : IRequestHandler<VacationsForMonthQuery, List<VacationDto>>
+    public class VacationsForMonthQueryHandler(IAppDbContext appDbContext) : IRequestHandler<VacationsForMonthQuery, List<VacationDto>>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public VacationsForMonthQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<List<VacationDto>> Handle(VacationsForMonthQuery request, CancellationToken cancellationToken)
         {

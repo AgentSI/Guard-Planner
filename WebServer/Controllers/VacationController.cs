@@ -2,7 +2,6 @@
 using Application.Interfaces.Pagination;
 using Application.Vacations.Commands;
 using Application.Vacations.Queries;
-using Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +10,9 @@ namespace WebServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VacationController : Controller
+    public class VacationController(IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-        private readonly AppDbContext _context;
-
-        public VacationController(IMediator mediator, AppDbContext context)
-        {
-            _mediator = mediator;
-            _context = context;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [Authorize]
         [HttpPost("all")]

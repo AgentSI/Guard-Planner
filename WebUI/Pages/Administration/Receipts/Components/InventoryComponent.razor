@@ -94,8 +94,8 @@
                     ReceiptId = ReceiptId
                 };
 
-            var result = await inventoryService.InventoryEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await inventoryService.InventoryEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

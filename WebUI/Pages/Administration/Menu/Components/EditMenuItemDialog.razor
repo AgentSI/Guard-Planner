@@ -1,0 +1,21 @@
+﻿@using Application.DTOs
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="MenuDto.DisplayName" Label="Nume" />
+        <MudCheckBox @bind-Checked="MenuDto.IsChecked" Label="Afișat în Meniu" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Anulare</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Salvare</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public MenuDto MenuDto { get; set; } = new MenuDto();
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(MenuDto));
+    void Cancel() => MudDialog.Cancel();
+}

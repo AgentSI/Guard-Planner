@@ -72,7 +72,7 @@
                 <MudTd>@context.WorkerName</MudTd>
                 <MudTd>@context.Hours</MudTd>
                 <MudTd>
-                    <MudLink OnClick="@(async () => await NavigateToOperations(context.Id))">
+                    <MudLink OnClick="@(async () => NavigateToOperations(context.Id))">
                         @context.NrOperations
                     </MudLink>
                 </MudTd>
@@ -137,7 +137,7 @@
                 SortDescending = sortDirection
             };
 
-        PaginationResult<GuardDto>? result;
+        PaginationResult<GuardDto> result;
         if (WorkerId.HasValue) result = await guardService.GetGuards(parameters, WorkerId.Value);
         else result = await guardService.GetGuards(parameters);
 
@@ -154,7 +154,7 @@
         }
     }
 
-    private void SortColumn(string columnName)
+    private async void SortColumn(string columnName)
     {
         if (sortColumn == columnName)
         {
@@ -166,7 +166,7 @@
             sortDirection = true;
         }
 
-        LoadData();
+        await LoadData();
     }
 
     private string GetSortIcon(string columnName)
@@ -185,7 +185,6 @@
 
         var options = new DialogOptions
             {
-                CloseOnEscapeKey = true,
                 MaxWidth = MudBlazor.MaxWidth.Large
             };
 
@@ -196,7 +195,7 @@
         else dialog = dialogsService.Show<AddEditGuardComponent>("Detalii gardă", parameters, options);
     }
 
-    private async Task NavigateToOperations(Guid? guardId)
+    private void NavigateToOperations(Guid? guardId)
     {
         if (guardId != null)
         {
@@ -204,7 +203,7 @@
         }
     }
 
-    private async Task NavigateToGenerate()
+    private void NavigateToGenerate()
     {
         navigationManager.NavigateTo($"/generate-guards");
     }

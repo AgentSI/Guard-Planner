@@ -6,26 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Queries
 {
-    public class UserResetPasswordQuery : IRequest<Unit>
+    public class UserResetPasswordQuery(string email, string password) : IRequest<Unit>
     {
-        public UserResetPasswordQuery(string email, string password)
-        {
-            Email = email;
-            Password = password;
-        }
-
-        public string Email { get; set; }
-        public string Password { get; set; }
+        public string Email { get; set; } = email;
+        public string Password { get; set; } = password;
     }
 
-    public class UserResetPasswordCommandHandler : IRequestHandler<UserResetPasswordQuery, Unit>
+    public class UserResetPasswordCommandHandler(IAppDbContext appDbContext) : IRequestHandler<UserResetPasswordQuery, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public UserResetPasswordCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(UserResetPasswordQuery request, CancellationToken cancellationToken)
         {

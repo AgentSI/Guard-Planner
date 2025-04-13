@@ -5,32 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Inventories.Commands
 {
-    public class InventoryEditCommand : IRequest<Unit>
+    public class InventoryEditCommand(InventoryDto model) : IRequest<Unit>
     {
-        public InventoryEditCommand(InventoryDto model)
-        {
-            Id = model.Id;
-            Amount = model.Amount;
-            Name = model.Name;
-            ReceiptId = model.ReceiptId;
-            Measure = model.Measure;
-        }
-
-        public Guid Id { get; set; }
-        public decimal Amount { get; set; }
-        public string Name { get; set; }
-        public string? Measure { get; set; }
-        public Guid ReceiptId { get; set; }
+        public Guid Id { get; set; } = model.Id;
+        public decimal Amount { get; set; } = model.Amount;
+        public string? Name { get; set; } = model.Name;
+        public string? Measure { get; set; } = model.Measure;
+        public Guid ReceiptId { get; set; } = model.ReceiptId;
     }
 
-    public class InventoryEditCommandHandler : IRequestHandler<InventoryEditCommand, Unit>
+    public class InventoryEditCommandHandler(IAppDbContext appDbContext) : IRequestHandler<InventoryEditCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public InventoryEditCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(InventoryEditCommand request, CancellationToken cancellationToken)
         {

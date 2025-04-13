@@ -16,8 +16,8 @@ namespace Application.Guards
                     Date = u.Date,
                     Hours = (int)u.Hours,
                     WorkerId = u.WorkerId,
-                    NrOperations = u.Operations.Count(),
-                    WorkerName = u.Worker.Name + " " + u.Worker.FirstName
+                    NrOperations = u.Operations!.Count(),
+                    WorkerName = u.Worker!.Name + " " + u.Worker.FirstName
                 };
             }
         }

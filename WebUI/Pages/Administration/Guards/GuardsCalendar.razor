@@ -138,6 +138,12 @@ else
     private DateTime? CurrentDate { get; set; } = DateTime.Now;
     private List<GuardDto> Guards { get; set; } = new List<GuardDto>();
     private List<GuardDto> LegentGuards { get; set; } = new List<GuardDto>();
+    private static Dictionary<string, string> WorkerColors { get; set; } = new Dictionary<string, string>();
+    private static readonly List<string> defaultColors = new List<string>
+    {
+        "#FF6500", "#1E3E62", "#4CC9FE", "#7E60BF", "#E4B1F0",
+        "#72BF78", "#AF1740", "#FEEC37", "#FF77B7", "#B1D690"
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -151,21 +157,23 @@ else
         Guards = await guardService.GetGuards(CurrentDate.Value.Month, CurrentDate.Value.Year);
         LegentGuards = Guards.DistinctBy(g => g.WorkerName).ToList();
 
-        var defaultColors = new List<string>
+        foreach (var guard in LegentGuards)
         {
-            "#FF6500", "#1E3E62", "#4CC9FE", "#7E60BF", "#E4B1F0",
-            "#72BF78", "#AF1740", "#FEEC37", "#FF77B7", "#B1D690"
-        };
+            if (!WorkerColors.ContainsKey(guard.WorkerName))
+            {
+                var nextColorIndex = WorkerColors.Count % defaultColors.Count;
+                WorkerColors[guard.WorkerName] = defaultColors[nextColorIndex];
+            }
+        }
 
-        for (int i = 0; i < LegentGuards.Count; i++)
+        foreach (var guard in LegentGuards)
         {
-            LegentGuards[i].Color = defaultColors[i % defaultColors.Count];
+            guard.Color = WorkerColors[guard.WorkerName];
         }
 
         foreach (var guard in Guards)
         {
-            var legendGuard = LegentGuards.FirstOrDefault(lg => lg.WorkerName == guard.WorkerName);
-            guard.Color = legendGuard?.Color ?? "grey";
+            guard.Color = WorkerColors[guard.WorkerName];
         }
 
         isLoadingType = false;

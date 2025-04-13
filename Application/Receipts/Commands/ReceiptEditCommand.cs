@@ -5,28 +5,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Receipts.Commands
 {
-    public class ReceiptEditCommand : IRequest<Unit>
+    public class ReceiptEditCommand(ReceiptDto model) : IRequest<Unit>
     {
-        public ReceiptEditCommand(ReceiptDto model)
-        {
-            Id = model.Id;
-            Name = model.Name;
-            OperationId = model.OperationId;
-        }
-
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public Guid OperationId { get; set; }
+        public Guid Id { get; set; } = model.Id;
+        public string? Name { get; set; } = model.Name;
+        public Guid OperationId { get; set; } = model.OperationId;
     }
 
-    public class ReceiptEditCommandHandler : IRequestHandler<ReceiptEditCommand, Unit>
+    public class ReceiptEditCommandHandler(IAppDbContext appDbContext) : IRequestHandler<ReceiptEditCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public ReceiptEditCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(ReceiptEditCommand request, CancellationToken cancellationToken)
         {

@@ -5,28 +5,16 @@ using MediatR;
 
 namespace Application.Instruments.Commands
 {
-    public class InstrumentCreateCommand : IRequest<Guid>
+    public class InstrumentCreateCommand(InstrumentDto create) : IRequest<Guid>
     {
-        public InstrumentCreateCommand(InstrumentDto create)
-        {
-            Amount = create.Amount;
-            Name = create.Name;
-            ReceiptId = create.ReceiptId;
-        }
-
-        public int Amount { get; set; }
-        public string Name { get; set; }
-        public Guid ReceiptId { get; set; }
+        public int Amount { get; set; } = create.Amount;
+        public string Name { get; set; } = create.Name;
+        public Guid ReceiptId { get; set; } = create.ReceiptId;
     }
 
-    public class InstrumentCreateCommandHandler : IRequestHandler<InstrumentCreateCommand, Guid>
+    public class InstrumentCreateCommandHandler(IAppDbContext appDbContext) : IRequestHandler<InstrumentCreateCommand, Guid>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public InstrumentCreateCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Guid> Handle(InstrumentCreateCommand request, CancellationToken cancellationToken)
         {

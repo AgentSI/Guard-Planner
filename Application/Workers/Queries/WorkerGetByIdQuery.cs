@@ -4,30 +4,20 @@ using MediatR;
 
 namespace Application.Workers.Queries
 {
-    public class WorkerGetByIdQuery : IRequest<WorkerDto>
+    public class WorkerGetByIdQuery(Guid id) : IRequest<WorkerDto>
     {
-        public WorkerGetByIdQuery(Guid id)
-        {
-            Id = id;
-        }
-
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
     }
 
-    public class WorkerGetByIdQueryHandler : IRequestHandler<WorkerGetByIdQuery, WorkerDto>
+    public class WorkerGetByIdQueryHandler(IAppDbContext appDbContext) : IRequestHandler<WorkerGetByIdQuery, WorkerDto>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public WorkerGetByIdQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<WorkerDto> Handle(WorkerGetByIdQuery request, CancellationToken cancellationToken)
+        public Task<WorkerDto> Handle(WorkerGetByIdQuery request, CancellationToken cancellationToken)
         {
             var worker = _appDbContext.Workers.Where(p => p.Id == request.Id).Select(WorkerMapping.WorkerProjection).FirstOrDefault();
-            if (worker != null) return worker;
-            else return null;
+            if (worker != null) return Task.FromResult(worker);
+            else return Task.FromResult(new WorkerDto { });
         }
     }
 }

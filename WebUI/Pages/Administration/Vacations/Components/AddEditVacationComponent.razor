@@ -27,10 +27,10 @@
                     <ValidationMessage For="@(() => formDetails.WorkerName)" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudDatePicker @bind-Date="formDetails.StartDate" Label="De la data" For="@(() => formDetails.StartDate)" DisableToolbar="true" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="formDetails.StartDate" Label="De la data" For="@(() => formDetails.StartDate)" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudDatePicker @bind-Date="formDetails.EndDate" Label="Până la data" For="@(() => formDetails.EndDate)" DisableToolbar="true" Variant="Variant.Outlined" />
+                    <MudDatePicker @bind-Date="formDetails.EndDate" Label="Până la data" For="@(() => formDetails.EndDate)" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField @bind-Value="formDetails.Reason" For="@(() => formDetails.Reason)" Label="Motiv" Variant="Variant.Outlined" />
@@ -109,8 +109,8 @@
                     Reason = formDetails.Reason
                 };
 
-            var result = await vacationService.VacationEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await vacationService.VacationEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

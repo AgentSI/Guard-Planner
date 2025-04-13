@@ -5,32 +5,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Commands
 {
-    public class UserEditCommand : IRequest<Unit>
+    public class UserEditCommand(UserDto model) : IRequest<Unit>
     {
-        public UserEditCommand(UserDto model)
-        {
-            Id = model.Id;
-            Email = model.Email;
-            Username = model.Username;
-            Password = model.Password;
-            Role = model.Role;
-        }
-
-        public Guid Id { get; set; }
-        public string Email { get; set; }
-        public string Username { get; set; }
-        public string? Password { get; set; }
-        public string Role { get; set; }
+        public Guid Id { get; set; } = model.Id;
+        public string? Email { get; set; } = model.Email;
+        public string? Username { get; set; } = model.Username;
+        public string? Password { get; set; } = model.Password;
+        public string? Role { get; set; } = model.Role;
+        public string? Phone { get; set; } = model.Phone;
+        public DateTime? Birthday { get; set; } = model.Birthday;
     }
 
-    public class UserEditCommandHandler : IRequestHandler<UserEditCommand, Unit>
+    public class UserEditCommandHandler(IAppDbContext appDbContext) : IRequestHandler<UserEditCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public UserEditCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(UserEditCommand request, CancellationToken cancellationToken)
         {
@@ -46,7 +34,9 @@ namespace Application.Users.Commands
                 userToEdit.Email = request.Email;
                 userToEdit.Username = request.Username;
                 userToEdit.UserRole = role;
-                userToEdit.UserRoleId = role.Id;
+                userToEdit.UserRoleId = role!.Id;
+                userToEdit.Phone = request.Phone;
+                userToEdit.Birthday = request.Birthday;
             }
 
             await _appDbContext.SaveChangesAsync(cancellationToken);

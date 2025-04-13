@@ -1,7 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Receipts.Commands;
 using Application.Receipts.Queries;
-using Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,16 +9,9 @@ namespace WebServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ReceiptController : Controller
+    public class ReceiptController(IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-        private readonly AppDbContext _context;
-
-        public ReceiptController(IMediator mediator, AppDbContext context)
-        {
-            _mediator = mediator;
-            _context = context;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [Authorize]
         [HttpGet("{id}")]

@@ -7,25 +7,15 @@ using System.Linq.Expressions;
 
 namespace Application.Users.Queries
 {
-    public class UserListQuery : IRequest<PaginationResult<UserDto>>
+    public class UserListQuery(PaginationParameter paginationParameter) : IRequest<PaginationResult<UserDto>>
     {
-        public UserListQuery(PaginationParameter paginationParameter)
-        {
-            PaginationParameter = paginationParameter;
-        }
-        public PaginationParameter PaginationParameter { get; set; }
+        public PaginationParameter PaginationParameter { get; set; } = paginationParameter;
     }
 
-    public class UserListQueryHandler : IRequestHandler<UserListQuery, PaginationResult<UserDto>>
+    public class UserListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext) : IRequestHandler<UserListQuery, PaginationResult<UserDto>>
     {
-        private readonly IPaginationService _paginationService;
-        private readonly IAppDbContext _appDbContext;
-
-        public UserListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext)
-        {
-            _paginationService = paginationService;
-            _appDbContext = appDbContext;
-        }
+        private readonly IPaginationService _paginationService = paginationService;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<PaginationResult<UserDto>> Handle(UserListQuery request, CancellationToken cancellationToken)
         {
@@ -36,8 +26,8 @@ namespace Application.Users.Queries
             {
                 if (query.SortBy == nameof(UserDto.Role))
                 {
-                    if (query.SortDescending.HasValue && query.SortDescending.Value) users = users.OrderByDescending(u => u.UserRole.RoleName);
-                    else users = users.OrderBy(u => u.UserRole.RoleName);
+                    if (query.SortDescending.HasValue && query.SortDescending.Value) users = users.OrderByDescending(u => u.UserRole!.RoleName);
+                    else users = users.OrderBy(u => u.UserRole!.RoleName);
                 }
                 else
                 {

@@ -106,8 +106,8 @@
                     GuardId = GuardId
                 };
 
-            var result = await operationService.OperationEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await operationService.OperationEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

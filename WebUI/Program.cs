@@ -13,6 +13,9 @@ using WebUI.Services.ReceiptServices;
 using WebUI.Services.InventoryServices;
 using WebUI.Services.VacationServices;
 using WebUI.Services.InstrumentServices;
+using WebUI.Services.RoleServices;
+using WebUI.Services.HourServices;
+using WebUI.Services.MenuServices;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -29,6 +32,9 @@ builder.Services.AddScoped<IReceiptService, ReceiptService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IInstrumentService, InstrumentService>();
 builder.Services.AddScoped<IVacationService, VacationService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IHourService, HourService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
 
 builder.Services.AddAuthorizationCore();
 

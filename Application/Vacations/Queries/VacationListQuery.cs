@@ -6,28 +6,16 @@ using MediatR;
 
 namespace Application.Vacations.Queries
 {
-    public class VacationListQuery : IRequest<PaginationResult<VacationDto>>
+    public class VacationListQuery(PaginationParameter paginationParameter, Guid? workerId) : IRequest<PaginationResult<VacationDto>>
     {
-        public VacationListQuery(PaginationParameter paginationParameter, Guid? workerId)
-        {
-            WorkerId = workerId;
-            PaginationParameter = paginationParameter;
-        }
-
-        public Guid? WorkerId { get; set; }
-        public PaginationParameter PaginationParameter { get; set; }
+        public Guid? WorkerId { get; set; } = workerId;
+        public PaginationParameter PaginationParameter { get; set; } = paginationParameter;
     }
 
-    public class VacationListQueryHandler : IRequestHandler<VacationListQuery, PaginationResult<VacationDto>>
+    public class VacationListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext) : IRequestHandler<VacationListQuery, PaginationResult<VacationDto>>
     {
-        private readonly IPaginationService _paginationService;
-        private readonly IAppDbContext _appDbContext;
-
-        public VacationListQueryHandler(IPaginationService paginationService, IAppDbContext appDbContext)
-        {
-            _paginationService = paginationService;
-            _appDbContext = appDbContext;
-        }
+        private readonly IPaginationService _paginationService = paginationService;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<PaginationResult<VacationDto>> Handle(VacationListQuery request, CancellationToken cancellationToken)
         {
@@ -54,8 +42,8 @@ namespace Application.Vacations.Queries
                 }
                 else if (query.SortBy == nameof(VacationDto.WorkerName))
                 {
-                    if (query.SortDescending.HasValue && query.SortDescending.Value) vacations = vacations.OrderByDescending(e => e.Worker.Name);
-                    else vacations = vacations.OrderBy(e => e.Worker.Name);
+                    if (query.SortDescending.HasValue && query.SortDescending.Value) vacations = vacations.OrderByDescending(e => e.Worker!.Name);
+                    else vacations = vacations.OrderBy(e => e.Worker!.Name);
                 }
             }
             else

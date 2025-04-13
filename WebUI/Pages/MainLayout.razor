@@ -7,6 +7,7 @@
 @inherits LayoutComponentBase
 
 @inject CurrentUserDto currentUser
+@inject CurrentUserService currentUserService
 @inject IUserAccountService userService
 @inject NavigationManager navigationManager
 
@@ -18,10 +19,11 @@
     <MudAppBar Elevation="0">
         <AuthorizeView>
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-            <MudButton Color="Color.Inherit" Edge="Edge.Start" Disabled="true">@currentUser.UserRole</MudButton>
+            <MudButton Color="Color.Inherit" Disabled="true">@currentUser.UserRole</MudButton>
         </AuthorizeView>
         <MudSpacer />
         <AuthorizeView>
+            <MudButton Color="Color.Inherit" Disabled="true">@user.Username</MudButton>
             <MudButton StartIcon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="LogOut">LogOut</MudButton>
             <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive">
                 <NavMenu />
@@ -38,6 +40,7 @@
 
 @code {
     bool _drawerOpen = true;
+    private UserDto user = new UserDto();
 
     void DrawerToggle()
     {
@@ -53,8 +56,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await currentUserService.InitializeAsync();
+
         if (!currentUser.IsAuthenticated)
             navigationManager.NavigateTo("/");
+
+        if (currentUser.IsAuthenticated)
+            user = await userService.GetUserById(currentUser.Id);
 
         StateHasChanged();
     }

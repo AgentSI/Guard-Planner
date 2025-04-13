@@ -8,10 +8,11 @@ namespace Infrastructure.Services
     {
         public async Task<PaginationResult<DestinationT>> PaginateAsync<TSource, DestinationT>(IQueryable<TSource> source, PaginationParameter request, Expression<Func<TSource, DestinationT>> MappingRule)
         {
-            var response = new PaginationResult<DestinationT>();
+            var response = new PaginationResult<DestinationT>
+            {
+                TotalItems = source.Count()
+            };
 
-            response.TotalItems = source.Count();
-            var count = source.Count();
             var items = await source
                                 .Skip((request.PageNumber - 1) * request.PageSize)
                                 .Take(request.PageSize)
@@ -20,11 +21,6 @@ namespace Infrastructure.Services
 
             response.Items = items;
             return response;
-        }
-
-        public Task<PaginationResult<TDestination>> PaginateAsyncEnumerable<TSource, TDestination>(IAsyncEnumerable<TSource> source, PaginationParameter request, Func<TSource, TDestination> mappingRule)
-        {
-            throw new NotImplementedException();
         }
     }
 }

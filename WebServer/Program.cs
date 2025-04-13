@@ -1,4 +1,4 @@
-using Application;
+﻿using Application;
 using Application.Interfaces;
 using Application.Interfaces.Pagination;
 using Application.Users.Commands;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Diagnostics;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,10 +22,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("Default"));
 });
 
-builder.Services.AddScoped<IAppDbContext>(provider => provider.GetService<AppDbContext>());
+builder.Services.AddScoped<IAppDbContext>(provider => provider.GetService<AppDbContext>()!);
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<LoginCommand>());
@@ -47,13 +48,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(builder.Configuration.GetSection("AppSettings:Token").Value)),
+            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(builder.Configuration.GetSection("AppSettings:Token").Value!)),
             ValidateIssuer = false,
             ValidateAudience = false,
             RequireExpirationTime = true,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero,
-            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha512 }
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha512]
         };
         options.Events = new JwtBearerEvents
         {
@@ -98,19 +99,32 @@ builder.Services.AddSwaggerGen(c =>
                 });
 });
 
+// Adaugă aceste linii pentru a te asigura că serverul ascultă pe HTTPS
+//builder.WebHost.ConfigureKestrel(options =>
+//{
+//    options.ListenAnyIP(7041, listenOptions =>
+//    {
+//        listenOptions.UseHttps(); // Folosește certificatul SSL
+//    });
+//});
+
 var app = builder.Build();
+
+// Deschide automat browserul când serverul pornește
+Process.Start(new ProcessStartInfo("cmd", "/c start https://localhost:7041")
+{
+    CreateNoWindow = true
+});
 
 using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 {
-    using (var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>())
+    using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    if (dbContext.Database.GetPendingMigrations().Any())
     {
-        if (dbContext.Database.GetPendingMigrations().Any())
-        {
-            dbContext.Database.Migrate();
-        }
-
-        DatabaseSeeder.SeedDb(dbContext);
+        dbContext.Database.Migrate();
     }
+
+    DatabaseSeeder.SeedDb(dbContext);
 }
 
 if (!app.Environment.IsDevelopment())

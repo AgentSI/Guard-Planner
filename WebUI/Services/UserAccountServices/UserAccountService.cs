@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.UserAccountServices
 {
-    public class UserAccountService : IUserAccountService
+    public class UserAccountService(HttpClient httpClient, ISnackbar snackbar) : IUserAccountService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public UserAccountService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<UserDto>> GetUsers(PaginationParameter paginationParameter)
         {

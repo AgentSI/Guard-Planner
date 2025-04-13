@@ -2,7 +2,6 @@
 using Application.Interfaces.Pagination;
 using Application.Guards.Commands;
 using Application.Guards.Queries;
-using Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +10,9 @@ namespace WebServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class GuardController : Controller
+    public class GuardController(IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-        private readonly AppDbContext _context;
-
-        public GuardController(IMediator mediator, AppDbContext context)
-        {
-            _mediator = mediator;
-            _context = context;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [Authorize]
         [HttpGet("all/{month}/{year}")]

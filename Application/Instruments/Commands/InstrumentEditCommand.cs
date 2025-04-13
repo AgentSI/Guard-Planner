@@ -5,30 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Instruments.Commands
 {
-    public class InstrumentEditCommand : IRequest<Unit>
+    public class InstrumentEditCommand(InstrumentDto model) : IRequest<Unit>
     {
-        public InstrumentEditCommand(InstrumentDto model)
-        {
-            Id = model.Id;
-            Amount = model.Amount;
-            Name = model.Name;
-            ReceiptId = model.ReceiptId;
-        }
-
-        public Guid Id { get; set; }
-        public int Amount { get; set; }
-        public string Name { get; set; }
-        public Guid ReceiptId { get; set; }
+        public Guid Id { get; set; } = model.Id;
+        public int Amount { get; set; } = model.Amount;
+        public string Name { get; set; } = model.Name;
+        public Guid ReceiptId { get; set; } = model.ReceiptId;
     }
 
-    public class InstrumentEditCommandHandler : IRequestHandler<InstrumentEditCommand, Unit>
+    public class InstrumentEditCommandHandler(IAppDbContext appDbContext) : IRequestHandler<InstrumentEditCommand, Unit>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public InstrumentEditCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Unit> Handle(InstrumentEditCommand request, CancellationToken cancellationToken)
         {

@@ -3,16 +3,10 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 namespace WebUI.Services.UserAccountServices
 {
-    public class CurrentUserService
+    public class CurrentUserService(AuthenticationStateProvider authStateProvider, CurrentUserDto currentUser)
     {
-        private readonly AuthenticationStateProvider authStateProvider;
-        private readonly CurrentUserDto currentUser;
-
-        public CurrentUserService(AuthenticationStateProvider authStateProvider, CurrentUserDto currentUser)
-        {
-            this.authStateProvider = authStateProvider;
-            this.currentUser = currentUser;
-        }
+        private readonly AuthenticationStateProvider authStateProvider = authStateProvider;
+        private readonly CurrentUserDto currentUser = currentUser;
 
         public async Task<CurrentUserDto> GetAsync()
         {
@@ -48,7 +42,7 @@ namespace WebUI.Services.UserAccountServices
             var authState = await authStateProvider.GetAuthenticationStateAsync();
             var claims = authState.User?.Claims.ToDictionary(d => d.Type, t => t.Value);
 
-            if (claims != null && claims.Any())
+            if (claims != null && claims.Count != 0)
             {
                 currentUser.IsAuthenticated = true;
                 currentUser.Id = Guid.Parse(claims[ClaimsDto.Id]);

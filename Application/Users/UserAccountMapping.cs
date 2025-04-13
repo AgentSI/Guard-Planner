@@ -15,8 +15,10 @@ namespace Application.Users
                     Id = u.Id,
                     Username = u.Username,
                     Email = u.Email,
-                    Role = u.UserRole.RoleName,
+                    Role = u.UserRole!.RoleName,
                     UserRoleId = u.UserRole.Id,
+                    Phone = u.Phone,
+                    Birthday = u.Birthday,
                     CreatedAt = u.CreatedAt
                 };
             }

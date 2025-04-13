@@ -5,6 +5,6 @@
         public bool IsAuthenticated { get; set; }
         public Guid Id { get; set; }
         public string Email { get; set; } = string.Empty;
-        public string UserRole { get; set; }
+        public string? UserRole { get; set; }
     }
 }

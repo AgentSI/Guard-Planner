@@ -29,9 +29,12 @@
                     <MudTextField @bind-Value="workerFormDetails.Email" For="@(() => workerFormDetails.Email)" Label="Email" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudCheckBox @bind-Value="workerFormDetails.Available" Label="Este disponibil"></MudCheckBox>
+                    <MudNumericField @bind-Value="workerFormDetails.NoDaysVacation" Variant="Variant.Outlined" Label="Zile de concediu "></MudNumericField>
                 </MudItem>
-                <MudItem xs="12" sm="6">
+                <MudItem xs="12" sm="3">
+                    <MudCheckBox @bind-Value="workerFormDetails.IsWorkDay" Label="Lucrează în timpul zilei"></MudCheckBox>
+                </MudItem>
+                <MudItem xs="12" sm="3">
                     <MudCheckBox @bind-Value="workerFormDetails.IsGuard" Label="Are gărzi"></MudCheckBox>
                 </MudItem>
                 @if (workerFormDetails.IsGuard)
@@ -108,8 +111,10 @@
                     Specialization = workerFormDetails.Specialization,
                     Email = workerFormDetails.Email,
                     Available = workerFormDetails.Available,
+                    IsWorkDay = workerFormDetails.IsWorkDay,
                     IsGuard  = workerFormDetails.IsGuard,
-                    Percent = workerFormDetails.Percent
+                    Percent = workerFormDetails.Percent,
+                    NoDaysVacation = workerFormDetails.NoDaysVacation
                 };
 
             var id = await workerService.WorkerCreate(create);
@@ -125,13 +130,15 @@
                     Specialization = workerFormDetails.Specialization,
                     Email = workerFormDetails.Email,
                     Available = workerFormDetails.Available,
+                    IsWorkDay = workerFormDetails.IsWorkDay,
                     IsGuard = workerFormDetails.IsGuard,
-                    Percent = workerFormDetails.Percent
+                    Percent = workerFormDetails.Percent,
+                    NoDaysVacation = workerFormDetails.NoDaysVacation
                 };
 
             if (!toEdit.IsGuard) toEdit.Percent = 0;
-            var result = await workerService.WorkerEdit(toEdit);
-            if (result != null) isSuccessfull = true;
+            await workerService.WorkerEdit(toEdit);
+            isSuccessfull = true;
         }
 
         if (isSuccessfull) Callback?.Invoke();

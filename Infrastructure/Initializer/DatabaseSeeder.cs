@@ -7,10 +7,41 @@ namespace Infrastructure.Initializer
     {
         public static void SeedDb(AppDbContext appDbContext)
         {
+            AddMenuItems(appDbContext);
             AddUserRole(appDbContext);
             AddUsers(appDbContext);
             AddPercents(appDbContext);
-            AddWorkers(appDbContext);
+            AddHours(appDbContext);
+        }
+
+        private static void AddMenuItems(AppDbContext appDbContext)
+        {
+            if (!appDbContext.MenuItems.Any())
+            {
+                var menuItems = new MenuItem[]
+                {
+                    new MenuItem { OriginalName = "Acasă", DisplayName = "Acasă", IsChecked = true, Href = "/", Icon = "Home"},
+
+                    new MenuItem { OriginalName = "Generează Grafic", DisplayName = "Generează Grafic", IsChecked = true, Href = "/generate-guards", Icon = "AutoMode" },
+                    new MenuItem { OriginalName = "Calendar Grafic", DisplayName = "Calendar Grafic", IsChecked = true, Href = "/guard-calendar", Icon = "CalendarMonth" },
+                    new MenuItem { OriginalName = "Tabel Grafic", DisplayName = "Tabel Grafic", IsChecked = true, Href = "/guards", Icon = "DarkMode" },
+                    new MenuItem { OriginalName = "Tabel Operații", DisplayName = "Tabel Operații", IsChecked = true, Href = "/operations", Icon = "MedicalServices" },
+
+                    new MenuItem { OriginalName = "Tabel Concedii", DisplayName = "Tabel Concedii", IsChecked = true, Href = "/vacations", Icon = "WbSunny" },
+                    new MenuItem { OriginalName = "Ore de lucru", DisplayName = "Ore de lucru", IsChecked = true, Href = "/hours", Icon = "HourglassFull" },
+                    new MenuItem { OriginalName = "Tabel de pontaj", DisplayName = "Tabel de pontaj", IsChecked = true, Href = "/workers-hours", Icon = "AccessAlarm" },
+                    new MenuItem { OriginalName = "Tabel Lucrători", DisplayName = "Tabel Lucrători", IsChecked = true, Href = "/workers", Icon = "Work" },
+                    new MenuItem { OriginalName = "Procent gardă", DisplayName = "Procent gardă", IsChecked = true, Href = "/percents", Icon = "Percent" },
+
+                    //new MenuItem { OriginalName = "Tabel Roluri", DisplayName = "Tabel Roluri", IsChecked = true, Href = "/roles", Icon = "PermIdentity" },
+                    //new MenuItem { OriginalName = "Tabel Utilizatori", DisplayName = "Tabel Utilizatori", IsChecked = true, Href = "/users", Icon = "PersonAdd" },
+                    new MenuItem { OriginalName = "Editare Menu", DisplayName = "Editare Menu", IsChecked = true, Href = "/edit-nav-menu", Icon = "Edit" },
+                    new MenuItem { OriginalName = "Profilul meu", DisplayName = "Profilul meu", IsChecked = true, Href = "/my-profile", Icon = "Person" }
+                };
+
+                appDbContext.MenuItems.AddRange(menuItems);
+                appDbContext.SaveChanges();
+            }
         }
 
         private static void AddUserRole(AppDbContext appDbContext)
@@ -75,29 +106,27 @@ namespace Infrastructure.Initializer
             }
         }
 
-        private static void AddWorkers(AppDbContext appDbContext)
+        private static void AddHours(AppDbContext appDbContext)
         {
-            if (!appDbContext.Workers.Any())
+            if (!appDbContext.Hours.Any())
             {
-                var worker = new Worker { Name = "Lucrător", Email = "worker@mail.com", Available = true, IsGuard = true, Percent = 0.25 };
-                var worker1 = new Worker { Name = "Ana", Email = "ana@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker2 = new Worker { Name = "Ion", Email = "ion@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker3 = new Worker { Name = "Inga", Email = "inga@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker4 = new Worker { Name = "Lera", Email = "lera@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker5 = new Worker { Name = "Nicu", Email = "nicu@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker6 = new Worker { Name = "Dima", Email = "dima@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker7 = new Worker { Name = "Ina", Email = "ina@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
-                var worker8 = new Worker { Name = "Olga", Email = "olga@mail.com", Available = true, IsGuard = true, Percent = 0.5 };
+                var hour1 = new Hour { Label = "8 ore", Value = 8 };
+                var hour2 = new Hour { Label = "24 ore", Value = 24 };
+                var hour3 = new Hour { Label = "Cn (concediu neplătit)", Value = 0 };
+                var hour4 = new Hour { Label = "R (zile de repaus sau odihnă)", Value = 0 };
+                var hour5 = new Hour { Label = "Sn (zile de sărbătoare nelucrătoare)", Value = 0 };
+                var hour6 = new Hour { Label = "Cm (concediu medical)", Value = 0 };
+                var hour7 = new Hour { Label = "Cc (concediu de maternitate)", Value = 0 };
+                var hour8 = new Hour { Label = "C (concediu plătit)", Value = 0 };
 
-                appDbContext.Workers.Add(worker);
-                appDbContext.Workers.Add(worker1);
-                appDbContext.Workers.Add(worker2);
-                appDbContext.Workers.Add(worker3);
-                appDbContext.Workers.Add(worker4);
-                appDbContext.Workers.Add(worker5);
-                appDbContext.Workers.Add(worker6);
-                appDbContext.Workers.Add(worker7);
-                appDbContext.Workers.Add(worker8);
+                appDbContext.Hours.Add(hour1);
+                appDbContext.Hours.Add(hour2);
+                appDbContext.Hours.Add(hour3);
+                appDbContext.Hours.Add(hour4);
+                appDbContext.Hours.Add(hour5);
+                appDbContext.Hours.Add(hour6);
+                appDbContext.Hours.Add(hour7);
+                appDbContext.Hours.Add(hour8);
                 appDbContext.SaveChanges();
             }
         }

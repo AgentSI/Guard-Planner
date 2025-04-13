@@ -17,7 +17,7 @@ namespace Application.Vacations
                     EndDate = u.EndDate,
                     Reason = u.Reason,
                     WorkerId = u.WorkerId,
-                    WorkerName = u.Worker.Name + " " + u.Worker.FirstName,
+                    WorkerName = u.Worker!.Name + " " + u.Worker.FirstName,
                     NoDays = u.NoDays
                 };
             }

@@ -3,14 +3,9 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.TokenServices
 {
-    public class MeService : IMeService
+    public class MeService(HttpClient httpClient) : IMeService
     {
-        private readonly HttpClient _httpClient;
-
-        public MeService(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        private readonly HttpClient _httpClient = httpClient;
 
         public async Task<ClaimsDto> Me(string jwt)
         {
@@ -22,7 +17,7 @@ namespace WebUI.Services.TokenServices
             }
             catch (Exception e)
             {
-                Console.WriteLine("Me Exception: ", e);
+                Console.WriteLine($"Me Exception: {e.Message}");
             }
 
             return null;

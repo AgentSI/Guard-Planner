@@ -5,17 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Workers.Queries
 {
-    public class GetWorkersQuery : IRequest<List<WorkerDto>>
-    {
-    }
+    public class GetWorkersQuery : IRequest<List<WorkerDto>> { }
 
-    public class GetUsersQueryHandler : IRequestHandler<GetWorkersQuery, List<WorkerDto>>
+    public class GetUsersQueryHandler(IAppDbContext appDbContext) : IRequestHandler<GetWorkersQuery, List<WorkerDto>>
     {
-        private readonly IAppDbContext _appDbContext;
-        public GetUsersQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<List<WorkerDto>> Handle(GetWorkersQuery request, CancellationToken cancellationToken)
         {

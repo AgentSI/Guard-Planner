@@ -4,30 +4,20 @@ using MediatR;
 
 namespace Application.Vacations.Queries
 {
-    public class VacationGetByIdQuery : IRequest<VacationDto>
+    public class VacationGetByIdQuery(Guid id) : IRequest<VacationDto>
     {
-        public VacationGetByIdQuery(Guid id)
-        { 
-            Id = id;
-        }
-
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
     }
 
-    public class VacationGetByIdQueryHandler : IRequestHandler<VacationGetByIdQuery, VacationDto>
+    public class VacationGetByIdQueryHandler(IAppDbContext appDbContext) : IRequestHandler<VacationGetByIdQuery, VacationDto>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public VacationGetByIdQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<VacationDto> Handle(VacationGetByIdQuery request, CancellationToken cancellationToken)
+        public Task<VacationDto> Handle(VacationGetByIdQuery request, CancellationToken cancellationToken)
         {
             var vacation = _appDbContext.Vacations.Where(p => p.Id == request.Id).Select(VacationMapping.VacationProjection).FirstOrDefault();
-            if (vacation != null) return vacation;
-            else return null;
+            if (vacation != null) return Task.FromResult(vacation);
+            else return Task.FromResult(new VacationDto());
         }
     }
 }

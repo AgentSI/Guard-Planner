@@ -2,7 +2,6 @@
 using Application.Interfaces.Pagination;
 using Application.Users.Commands;
 using Application.Users.Queries;
-using Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +10,9 @@ namespace WebServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : Controller
+    public class UserController(IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-        private readonly AppDbContext _context;
-
-        public UserController(IMediator mediator, AppDbContext context)
-        {
-            _mediator = mediator;
-            _context = context;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [Authorize]
         [HttpPost("all")]
@@ -105,10 +97,10 @@ namespace WebServer.Controllers
         [HttpGet("log-out")]
         [HttpPost("log-out")]
         [AllowAnonymous]
-        public async Task<ActionResult<string>> LogOut()
+        public Task<ActionResult<string>>? LogOut()
         {
             Response.Cookies.Delete("token");
-            return Ok("");
+            return null;
         }
     }
 }

@@ -25,17 +25,13 @@ namespace Domain
 
         public static string HashPassword(string password)
         {
-            if (password == null)
-            {
-                throw new ArgumentNullException(nameof(password));
-            }
+            ArgumentNullException.ThrowIfNull(password);
 
-            // Produce a version 0 (see comment above) password hash.
-            byte[] salt;
+            byte[] salt = GenerateSaltInternal();
             byte[] subkey;
-            using (var deriveBytes = new Rfc2898DeriveBytes(password, SaltSize, Pbkdf2IterCount))
+
+            using (var deriveBytes = new Rfc2898DeriveBytes(password, salt, Pbkdf2IterCount, HashAlgorithmName.SHA256))
             {
-                salt = deriveBytes.Salt;
                 subkey = deriveBytes.GetBytes(Pbkdf2SubkeyLength);
             }
 
@@ -48,14 +44,8 @@ namespace Domain
 
         public static bool VerifyHashedPassword(string hashedPassword, string password)
         {
-            if (hashedPassword == null)
-            {
-                throw new ArgumentNullException(nameof(hashedPassword));
-            }
-            if (password == null)
-            {
-                throw new ArgumentNullException(nameof(password));
-            }
+            ArgumentNullException.ThrowIfNull(hashedPassword);
+            ArgumentNullException.ThrowIfNull(password);
 
             var hashedPasswordBytes = Convert.FromBase64String(hashedPassword);
 
@@ -72,7 +62,7 @@ namespace Domain
             Buffer.BlockCopy(hashedPasswordBytes, 1 + SaltSize, storedSubkey, 0, Pbkdf2SubkeyLength);
 
             byte[] generatedSubkey;
-            using (var deriveBytes = new Rfc2898DeriveBytes(password, salt, Pbkdf2IterCount))
+            using (var deriveBytes = new Rfc2898DeriveBytes(password, salt, Pbkdf2IterCount, HashAlgorithmName.SHA256))
             {
                 generatedSubkey = deriveBytes.GetBytes(Pbkdf2SubkeyLength);
             }

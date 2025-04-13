@@ -4,30 +4,20 @@ using MediatR;
 
 namespace Application.Receipts.Queries
 {
-    public class ReceiptGetByIdQuery : IRequest<ReceiptDto>
+    public class ReceiptGetByIdQuery(Guid id) : IRequest<ReceiptDto>
     {
-        public ReceiptGetByIdQuery(Guid id)
-        { 
-            Id = id;
-        }
-
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
     }
 
-    public class ReceiptGetByIdQueryHandler : IRequestHandler<ReceiptGetByIdQuery, ReceiptDto>
+    public class ReceiptGetByIdQueryHandler(IAppDbContext appDbContext) : IRequestHandler<ReceiptGetByIdQuery, ReceiptDto>
     {
-        private readonly IAppDbContext _appDbContext;
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
-        public ReceiptGetByIdQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
-
-        public async Task<ReceiptDto> Handle(ReceiptGetByIdQuery request, CancellationToken cancellationToken)
+        public Task<ReceiptDto> Handle(ReceiptGetByIdQuery request, CancellationToken cancellationToken)
         {
             var receipt = _appDbContext.Receipts.Where(p => p.Id == request.Id).Select(ReceiptMapping.ReceiptProjection).FirstOrDefault();
-            if (receipt != null) return receipt;
-            else return null;
+            if (receipt != null) return Task.FromResult(receipt);
+            else return Task.FromResult(new ReceiptDto { });
         }
     }
 }

@@ -6,18 +6,11 @@ using WebUI.Services.TokenServices;
 
 namespace WebUI.Services.UserAccountServices
 {
-    public class CustomAuthStateProvider : AuthenticationStateProvider
+    public class CustomAuthStateProvider(HttpClient httpClient, IJSRuntime jSRuntime, IMeService meService) : AuthenticationStateProvider
     {
-        private readonly HttpClient _httpClient;
-        private readonly IJSRuntime _jsRuntime;
-        private readonly IMeService _meService;
-
-        public CustomAuthStateProvider(HttpClient httpClient, IJSRuntime jSRuntime, IMeService meService)
-        {
-            _httpClient = httpClient;
-            _jsRuntime = jSRuntime;
-            _meService = meService;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly IJSRuntime _jsRuntime = jSRuntime;
+        private readonly IMeService _meService = meService;
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
@@ -45,6 +38,7 @@ namespace WebUI.Services.UserAccountServices
                 catch (Exception e)
                 {
                     identity = new ClaimsIdentity();
+                    Console.WriteLine(e.Message);
                 }
             }
 

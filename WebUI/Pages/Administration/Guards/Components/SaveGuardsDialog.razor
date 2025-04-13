@@ -3,7 +3,7 @@
 
 @inject IGuardService guardService
 
-<MudDialog Width="300px">
+<MudDialog>
     <DialogActions>
         <MudButton Variant="Variant.Filled" OnClick="@(() => SaveGuards(@Guards))" ButtonType="ButtonType.Submit" Color="Color.Error">Confirm</MudButton>
         <MudButton Variant="Variant.Filled" OnClick="Cancel">Anulează</MudButton>

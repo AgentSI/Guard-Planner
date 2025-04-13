@@ -4,24 +4,14 @@ using MediatR;
 
 namespace Application.Workers.Commands
 {
-    public class PercentCreateCommand : IRequest<Guid>
+    public class PercentCreateCommand(double percent) : IRequest<Guid>
     {
-        public PercentCreateCommand(double percent)
-        {
-            Percent = percent;
-        }
-
-        public double Percent { get; set; }
+        public double Percent { get; set; } = percent;
     }
 
-    public class PercentCreateCommandHandler : IRequestHandler<PercentCreateCommand, Guid>
+    public class PercentCreateCommandHandler(IAppDbContext appDbContext) : IRequestHandler<PercentCreateCommand, Guid>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public PercentCreateCommandHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<Guid> Handle(PercentCreateCommand request, CancellationToken cancellationToken)
         {

@@ -11,29 +11,17 @@ using System.Security.Claims;
 
 namespace Application.Users.Commands
 {
-    public class LoginCommand : IRequest<AuthResultDto>
+    public class LoginCommand(LoginDto postModel) : IRequest<AuthResultDto>
     {
-        public LoginCommand(LoginDto postModel)
-        {
-            Email = postModel.Email;
-            Password = postModel.Password;
-        }
-
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string FireBaseTokenId { get; set; }
+        public string? Email { get; set; } = postModel.Email;
+        public string? Password { get; set; } = postModel.Password;
+        public string? FireBaseTokenId { get; set; }
     }
 
-    public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResultDto>
+    public class LoginCommandHandler(IAppDbContext appDbContext, IConfiguration configuration) : IRequestHandler<LoginCommand, AuthResultDto>
     {
-        private readonly IAppDbContext _appDbContext;
-        private readonly IConfiguration _configuration;
-
-        public LoginCommandHandler(IAppDbContext appDbContext, IConfiguration configuration)
-        {
-            _appDbContext = appDbContext;
-            _configuration = configuration;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
+        private readonly IConfiguration _configuration = configuration;
 
         public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
@@ -48,7 +36,7 @@ namespace Application.Users.Commands
             }
             else
             {
-                if (Crypto.VerifyHashedPassword(appUser.PasswordHash, AuthorizationVariables.Salt + request.Password))
+                if (Crypto.VerifyHashedPassword(appUser.PasswordHash!, AuthorizationVariables.Salt + request.Password))
                 {
                     response.Token = CreateToken(appUser);
                     response.Success = true;
@@ -70,11 +58,11 @@ namespace Application.Users.Commands
             List<Claim> claims = new List<Claim>
             {
                 new Claim("userId", user.Id.ToString()),
-                new Claim("role", user.UserRole.RoleName.ToString()),
-                new Claim("email", user.Email),
+                new Claim("role", user.UserRole!.RoleName!.ToString()),
+                new Claim("email", user.Email!),
             };
 
-            var key = new SymmetricSecurityKey(Convert.FromBase64String(_configuration.GetSection("AppSettings:Token").Value));
+            var key = new SymmetricSecurityKey(Convert.FromBase64String(_configuration.GetSection("AppSettings:Token").Value!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
             var token = new JwtSecurityToken
                 (

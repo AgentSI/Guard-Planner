@@ -2,25 +2,17 @@
 using Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Application.Workers.Queries
 {
     public class GetPercentListQuery : IRequest<List<PercentDto>>
     {
-        public GetPercentListQuery()
-        {
-        }
+        public GetPercentListQuery() { }
     }
 
-    public class GetPercentListQueryHandler : IRequestHandler<GetPercentListQuery, List<PercentDto>>
+    public class GetPercentListQueryHandler(IAppDbContext appDbContext) : IRequestHandler<GetPercentListQuery, List<PercentDto>>
     {
-        private readonly IAppDbContext _appDbContext;
-
-        public GetPercentListQueryHandler(IAppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+        private readonly IAppDbContext _appDbContext = appDbContext;
 
         public async Task<List<PercentDto>> Handle(GetPercentListQuery request, CancellationToken cancellationToken)
         {

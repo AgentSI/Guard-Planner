@@ -6,16 +6,10 @@ using System.Net.Http.Json;
 
 namespace WebUI.Services.GuardServices
 {
-    public class GuardService : IGuardService
+    public class GuardService(HttpClient httpClient, ISnackbar snackbar) : IGuardService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISnackbar _snackbar;
-
-        public GuardService(HttpClient httpClient, ISnackbar snackbar)
-        {
-            _httpClient = httpClient;
-            _snackbar = snackbar;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ISnackbar _snackbar = snackbar;
 
         public async Task<PaginationResult<GuardDto>> GetGuards(PaginationParameter paginationParameter)
         {

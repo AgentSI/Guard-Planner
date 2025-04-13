@@ -1,0 +1,64 @@
+﻿@using Application.DTOs
+@using Application.Interfaces.Pagination
+@using WebUI.Services.HourServices
+
+@inject IHourService hourService
+@inject CurrentUserDto currentUser
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="formDetails" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Label" For="@(() => formDetails.Label)" Label="Nume" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="formDetails.Value" For="@(() => formDetails.Value)" Label="Valoare" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">Salvează</MudButton>
+                        <MudButton OnClick="Cancel" Variant="Variant.Filled">Anulează</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    PaginationParameter paginationParameters = new PaginationParameter();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public Guid? HourId { get; set; }
+
+    [Parameter]
+    public Func<Task> Callback { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    HourDto formDetails = new HourDto();
+
+    string message = string.Empty;
+    string messageCssClass = string.Empty;
+
+    private async Task Save()
+    {
+        bool isSuccessfull = false;
+
+        if (!HourId.HasValue)
+        {
+            var id = await hourService.HourCreate(formDetails);
+            isSuccessfull = id != Guid.Empty;
+        }
+
+        if (isSuccessfull) Callback?.Invoke();
+
+        MudDialog.Close();
+    }
+}

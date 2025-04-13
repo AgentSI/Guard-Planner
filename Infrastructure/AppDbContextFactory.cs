@@ -8,7 +8,7 @@ namespace Infrastructure
         public AppDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlServer("Data Source=.\\sqlexpress;Initial Catalog=GuardPlanner;Integrated Security=SSPI;Persist Security Info=True;TrustServerCertificate=True");
+            optionsBuilder.UseSqlite("Data Source=GuardPlanner.db;");
             return new AppDbContext(optionsBuilder.Options);
         }
     }

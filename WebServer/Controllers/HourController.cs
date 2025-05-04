@@ -14,14 +14,14 @@ namespace WebServer.Controllers
         private readonly IMediator _mediator = mediator;
 
         [Authorize]
-        [HttpGet()]
+        [HttpGet]
         public async Task<List<HourDto>> GetHourList()
         {
             return await _mediator.Send(new GetHourListQuery());
         }
 
         [Authorize]
-        [HttpPost()]
+        [HttpPost]
         public async Task<Guid> HourCreate([FromBody] HourDto hour)
         {
             return await _mediator.Send(new HourCreateCommand(hour));

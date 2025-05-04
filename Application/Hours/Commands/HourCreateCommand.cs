@@ -17,7 +17,7 @@ namespace Application.Hours.Commands
 
         public async Task<Guid> Handle(HourCreateCommand request, CancellationToken cancellationToken)
         {
-            var existing = _appDbContext.Hours.FirstOrDefault(u => u.Value == request.Value || u.Label == request.Label);
+            var existing = _appDbContext.Hours.FirstOrDefault(u => u.Value == request.Value && u.Label == request.Label);
             if (existing != null) return Guid.Empty;
             
             var create = new Hour

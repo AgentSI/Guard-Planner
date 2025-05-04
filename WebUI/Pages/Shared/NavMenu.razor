@@ -31,7 +31,7 @@
 
         if (graficItems.Any())
         {
-            <MudNavGroup Title="Administrare Gărzi" Icon="@Icons.Material.Filled.Settings" Expanded="true">
+            <MudNavGroup Title="Administrare Grafic" Icon="@Icons.Material.Filled.Settings" Expanded="true">
                 @foreach (var item in graficItems)
                 {
                     <MudNavLink Href="@item.Href" Icon="@GetIcon(item.Icon)">@item.DisplayName</MudNavLink>
@@ -83,7 +83,7 @@
         }
     }
 </MudNavMenu>
-<p class="mud-typography mud-typography-body2 mud-typography-align-justify d-flex align-content-end flex-wrap flex-grow-1 gap-4 ml-5">©2024 Ivanova Evghenia</p>
+<p class="mud-typography mud-typography-body2 mud-typography-align-justify d-flex align-content-end flex-wrap flex-grow-1 gap-4 ml-5">©2024 Evghenia</p>
 
 @code {
     private WorkerDto worker = new WorkerDto();

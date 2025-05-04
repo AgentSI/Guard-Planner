@@ -13,7 +13,7 @@ namespace Application.Workers.Queries
 
         public async Task<List<WorkerDto>> Handle(GetWorkersQuery request, CancellationToken cancellationToken)
         {
-            var workers = await _appDbContext.Workers.ToListAsync();
+            var workers = await _appDbContext.Workers.Where(w => w.IsGuard).ToListAsync();
             var workerDtos = workers.Select(w => new WorkerDto
             {
                 Id = w.Id,

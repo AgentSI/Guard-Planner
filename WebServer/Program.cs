@@ -99,23 +99,6 @@ builder.Services.AddSwaggerGen(c =>
                 });
 });
 
-// Adaugă aceste linii pentru a te asigura că serverul ascultă pe HTTPS
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-//    options.ListenAnyIP(7041, listenOptions =>
-//    {
-//        listenOptions.UseHttps(); // Folosește certificatul SSL
-//    });
-//});
-
-var app = builder.Build();
-
-// Deschide automat browserul când serverul pornește
-Process.Start(new ProcessStartInfo("cmd", "/c start https://localhost:7041")
-{
-    CreateNoWindow = true
-});
-
 using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 {
     using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();

@@ -22,72 +22,76 @@ namespace Application.Guards.Queries
             var totalDays = DateTime.DaysInMonth(startOfMonth.Year, startOfMonth.Month);
             var workers = await _mediator.Send(new GetWorkersQuery(), cancellationToken);
 
-            var previousMonth = startOfMonth.AddDays(-1);
-            var lastGuardFromPreviousMonth = await _mediator.Send(
-                new GuardsGetQuery(previousMonth.Month, previousMonth.Year), cancellationToken);
-            
-            var lastWorkerFromPreviousMonth = lastGuardFromPreviousMonth
-                .Where(g => g.Date?.Date == previousMonth.Date)
-                .Select(g => g.WorkerName)
-                .FirstOrDefault();
-
-            if (lastWorkerFromPreviousMonth != null)
+            if (workers.Count() == 4)
             {
-                var currentIndex = workers.FindIndex(w => 
-                {
-                    var fullName = (w.Name + " " + w.FirstName).Trim();
-                    return fullName == lastWorkerFromPreviousMonth.Trim();
-                });
+                var previousMonth = startOfMonth.AddDays(-1);
+                var lastGuardFromPreviousMonth = await _mediator.Send(
+                    new GuardsGetQuery(previousMonth.Month, previousMonth.Year), cancellationToken);
 
-                if (currentIndex >= 0)
+                var lastWorkerFromPreviousMonth = lastGuardFromPreviousMonth
+                    .Where(g => g.Date?.Date == previousMonth.Date)
+                    .Select(g => g.WorkerName)
+                    .FirstOrDefault();
+
+                if (lastWorkerFromPreviousMonth != null)
                 {
-                    if (currentIndex == workers.Count - 1)
+                    var currentIndex = workers.FindIndex(w =>
                     {
-                        workers = workers.ToList();
-                    }
-                    else
+                        var fullName = (w.Name + " " + w.FirstName).Trim();
+                        return fullName == lastWorkerFromPreviousMonth.Trim();
+                    });
+
+                    if (currentIndex >= 0)
                     {
-                        var reorderedWorkers = workers
-                            .Skip(currentIndex + 1)
-                            .Concat(workers.Take(currentIndex + 1))
-                            .ToList();
-                        workers = reorderedWorkers;
+                        if (currentIndex == workers.Count - 1)
+                        {
+                            workers = workers.ToList();
+                        }
+                        else
+                        {
+                            var reorderedWorkers = workers
+                                .Skip(currentIndex + 1)
+                                .Concat(workers.Take(currentIndex + 1))
+                                .ToList();
+                            workers = reorderedWorkers;
+                        }
                     }
                 }
-            }
 
-            var vacations = await _mediator.Send(new VacationsForMonthQuery(request.Month, request.Year), cancellationToken);
-            var assignedDates = workers.ToDictionary(
-                worker => (worker.Name + " " + worker.FirstName).Trim(),
-                worker => new List<DateTime>()
-            );
-            var allAssignedDates = new HashSet<DateTime>();
-
-            AssignGuards(request, workers, vacations, assignedDates, allAssignedDates, guards, totalDays, startOfMonth, 3);
-
-            if (allAssignedDates.Count < totalDays)
-            {
-                guards.Clear();
-                assignedDates = workers.ToDictionary(
+                var vacations = await _mediator.Send(new VacationsForMonthQuery(request.Month, request.Year), cancellationToken);
+                var assignedDates = workers.ToDictionary(
                     worker => (worker.Name + " " + worker.FirstName).Trim(),
                     worker => new List<DateTime>()
                 );
-                allAssignedDates.Clear();
-                AssignGuards(request, workers, vacations, assignedDates, allAssignedDates, guards, totalDays, startOfMonth, 2);
-            }
+                var allAssignedDates = new HashSet<DateTime>();
 
-            if (allAssignedDates.Count < totalDays)
-            {
-                guards.Clear();
-                assignedDates = workers.ToDictionary(
-                    worker => (worker.Name + " " + worker.FirstName).Trim(),
-                    worker => new List<DateTime>()
-                );
-                allAssignedDates.Clear();
-                AssignGuards(request, workers, vacations, assignedDates, allAssignedDates, guards, totalDays, startOfMonth, 1);
-            }
+                AssignGuards(request, workers, vacations, assignedDates, allAssignedDates, guards, totalDays, startOfMonth, 3);
 
-            return guards.OrderBy(g => g.WorkerName).ToList();
+                if (allAssignedDates.Count < totalDays)
+                {
+                    guards.Clear();
+                    assignedDates = workers.ToDictionary(
+                        worker => (worker.Name + " " + worker.FirstName).Trim(),
+                        worker => new List<DateTime>()
+                    );
+                    allAssignedDates.Clear();
+                    AssignGuards(request, workers, vacations, assignedDates, allAssignedDates, guards, totalDays, startOfMonth, 2);
+                }
+
+                if (allAssignedDates.Count < totalDays)
+                {
+                    guards.Clear();
+                    assignedDates = workers.ToDictionary(
+                        worker => (worker.Name + " " + worker.FirstName).Trim(),
+                        worker => new List<DateTime>()
+                    );
+                    allAssignedDates.Clear();
+                    AssignGuards(request, workers, vacations, assignedDates, allAssignedDates, guards, totalDays, startOfMonth, 1);
+                }
+
+                return guards.OrderBy(g => g.WorkerName).ToList();
+            }
+            else return await _mediator.Send(new RandomGuardsQuery(request.Month, request.Year), cancellationToken);
         }
 
         private void AssignGuards(GenerateGuardsQuery request, List<WorkerDto> workers, List<VacationDto> vacations,

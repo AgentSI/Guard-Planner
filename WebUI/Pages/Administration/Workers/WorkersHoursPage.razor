@@ -24,6 +24,7 @@
 <MudTable Items="workerHours" T="WorkerHoursDto">
     <HeaderContent>
         <MudTh>Nume lucrător</MudTh>
+        <MudTh>Total ore</MudTh>
         @if (SelectedDate.HasValue)
         {
             foreach (var day in DaysInMonth)
@@ -39,10 +40,10 @@
                 }
             }
         }
-        <MudTh>Total ore</MudTh>
     </HeaderContent>
     <RowTemplate Context="context">
         <MudTd>@context.WorkerName</MudTd>
+        <MudTd>@context.HoursWorked</MudTd>
         @if (SelectedDate.HasValue)
         {
             var daysInMonth = DateTime.DaysInMonth(SelectedDate.Value.Year, SelectedDate.Value.Month);
@@ -56,7 +57,6 @@
                 </MudTd>
             }
         }
-        <MudTd>@context.HoursWorked</MudTd>
     </RowTemplate>
 </MudTable>
 <br />
@@ -72,11 +72,13 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadWorkerHours();
+        StateHasChanged();
     }
 
     private async Task OnDateChanged()
     {
         await LoadWorkerHours();
+        StateHasChanged();
     }
 
     private async Task LoadWorkerHours()
@@ -86,20 +88,25 @@
             int currentMonth = SelectedDate.Value.Month;
             int currentYear = SelectedDate.Value.Year;
 
-            if (currentMonth != previousMonth || currentYear != previousYear)
+            if (currentMonth == previousMonth || currentYear == previousYear)
+            {
+                previousMonth = currentMonth - 1;
+                previousYear = currentYear - 1;
+            }
+            else
             {
                 previousMonth = currentMonth;
                 previousYear = currentYear;
-
-                DaysInMonth.Clear();
-                int daysInMonth = DateTime.DaysInMonth(SelectedDate.Value.Year, SelectedDate.Value.Month);
-                for (int i = 1; i <= daysInMonth; i++)
-                {
-                    DaysInMonth.Add(i);
-                }
-
-                workerHours = await workerService.GetWorkerHours(currentMonth, currentYear);
             }
+
+            DaysInMonth.Clear();
+            int daysInMonth = DateTime.DaysInMonth(SelectedDate.Value.Year, SelectedDate.Value.Month);
+            for (int i = 1; i <= daysInMonth; i++)
+            {
+                DaysInMonth.Add(i);
+            }
+
+            workerHours = await workerService.GetWorkerHours(currentMonth, currentYear);
         }
     }
 

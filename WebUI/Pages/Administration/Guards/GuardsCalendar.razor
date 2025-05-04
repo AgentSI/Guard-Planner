@@ -148,6 +148,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         await LoadGuardsAsync();
+        StateHasChanged();
     }
 
     private async Task LoadGuardsAsync()
